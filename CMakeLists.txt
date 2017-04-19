@@ -1,3 +1,6 @@
+add_definitions(-D_XOPEN_SOURCE=500)
+add_definitions(-D_GNU_SOURCE)
+
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
