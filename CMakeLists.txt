@@ -398,6 +398,8 @@ IF(WIN32 AND NOT ANDROID)
     # Both Cygwin and Msys need -DNOMINMAX ???
     IF(UNIX)
         ADD_DEFINITIONS(-DNOMINMAX)
+	## TODO move the XOPEN_SOURCE/GNU_SOURCE into here? --- No, because
+	## cygwin no longer defines WIN32.
     ENDIF()
 
 ########################################################################################################
