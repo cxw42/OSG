@@ -20,6 +20,12 @@
 #include <osg/Geometry>
 #include <algorithm>
 
+//Ugly hack for Cygwin building against w32api rather than x11.
+//In that situation, w32api/wingdi.h defines RELATIVE.
+#if defined(WIN32) && defined(RELATIVE)
+#undef RELATIVE
+#endif
+
 namespace osgAnimation
 {
 

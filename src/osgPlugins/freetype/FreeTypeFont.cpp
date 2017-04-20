@@ -11,6 +11,7 @@
  * OpenSceneGraph Public License for more details.
 */
 
+
 #include "FreeTypeFont.h"
 #include "FreeTypeLibrary.h"
 
@@ -22,6 +23,14 @@
 #include <osg/Notify>
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
+
+// w32api/minwindef.h defines "near" and "far" as empty.  Change them back
+// to real names.
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#undef near
+#undef far
+#endif
+
 
 namespace FreeType
 {
