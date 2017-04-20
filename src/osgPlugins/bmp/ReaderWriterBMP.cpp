@@ -85,6 +85,20 @@ struct BMPHeader {
     unsigned int imageOffset;
 };
 
+// Ugly hack when using w32api - <osg/GL> pulls in (eventually) wingdi.h.
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#undef BI_RGB
+#undef BI_RLE8
+#undef BI_RLE4
+#undef BI_BITFIELDS
+#undef BI_JPEG
+#undef BI_PNG
+
+#define BITMAPINFOHEADER OSG_BITMAPINFOHEADER
+#define BITMAPCOREHEADER OSG_BITMAPCOREHEADER
+
+#endif //OSG_HACK_RENAME_READERWRITER_INTERNALS
+
 /*
  * Windows v3 header
  */

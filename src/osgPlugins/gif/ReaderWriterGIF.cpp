@@ -48,6 +48,12 @@
 #include <string.h>
 #include <stdio.h>
 
+// For Cygwin using w32api, the Windows DrawText->DrawText{A,W} collides
+// with gif_lib's DrawText().  Fix that.
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#undef DrawText
+#endif //OSG_HACK_RENAME_READERWRITER_INTERNALS
+
 extern  "C"
 {
     #include <gif_lib.h>

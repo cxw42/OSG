@@ -2,7 +2,7 @@
 #define OSG_SHAPE_H
 
 #include <stdio.h>
-#ifndef WIN32
+#if (!defined(WIN32)) || defined(OSG_HACK_RENAME_READERWRITER_INTERNALS)
 #include <unistd.h>
 #endif
 #include <osg/Referenced>

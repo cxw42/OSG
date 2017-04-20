@@ -34,7 +34,7 @@
 // * disallow some control characters
 // * does not support inf or nan values
 
-#if defined(WIN32) && !defined(__MINGW32__) && (!defined(_MSC_VER) || _MSC_VER<=1700)
+#if (defined(WIN32) && !defined(__MINGW32__) && (!defined(_MSC_VER) || _MSC_VER<=1700)) && (!defined(OSG_HACK_RENAME_READERWRITER_INTERNALS))
 namespace std
 {
     inline int isfinite( double x ) { return _finite( x ); }
