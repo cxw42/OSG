@@ -449,7 +449,7 @@ public:
 
 			WSAEventSelect( i->second->impl_->Socket(), events[j], 0 ); // remove association between socket and event
 			CloseHandle( events[j] );
-			unsigned long enableNonblocking = 0;
+			uint32_t enableNonblocking = 0;
 			ioctlsocket( i->second->impl_->Socket(), FIONBIO, &enableNonblocking );  // make the socket blocking again
 		}
 	}

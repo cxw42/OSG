@@ -43,6 +43,10 @@
 #include <osgViewer/CompositeViewer>
 #include <osgGA/TrackballManipulator>
 
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#undef near
+#undef far
+#endif
 
 // Given a Camera, create a wireframe representation of its
 // view frustum. Create a default representation if camera==NULL.
