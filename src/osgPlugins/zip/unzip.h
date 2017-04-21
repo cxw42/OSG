@@ -6,6 +6,8 @@
 // by Lucian Wischik to simplify and extend its use in Windows/C++. Also
 // encryption and unicode filenames have been added.
 
+// See http://www.wischik.com/lu/programmer/zip_utils.html for more info.
+// Note that -DZIP_STD creates a version with no Windows-specific dependencies.
 
 #ifndef _unzip_H
 #define _unzip_H
@@ -20,14 +22,14 @@
 #include <sys/utime.h> // microsoft puts it here
 #else
 #include <utime.h>
-#endif
+#endif //_MSC_VER
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__)
 #include <direct.h>
 #define lumkdir(t) (_mkdir(t))
 #else
 #include <unistd.h>
 #define lumkdir(t) (mkdir(t,0755))
-#endif
+#endif //_MSC_VER or __BORLANDC__ or __MINGW32__
 #include <sys/types.h>
 #include <sys/stat.h>
 //
@@ -36,36 +38,53 @@ typedef unsigned short WORD;
 #define _tcsicmp stricmp
 #define _tcsncpy strncpy
 #define _tcsstr strstr
-#define INVALID_HANDLE_VALUE 0
+
+#ifndef INVALID_HANDLE_VALUE
+#define INVALID_HANDLE_VALUE (0)
+#endif //INVALID_HANDLE_VALUE
+
 #ifndef _T
 #define _T(s) s
-#endif
+#endif //_T
+
 #ifndef S_IWUSR
 #define S_IWUSR 0000200
 #define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
 #define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
-#endif
-//
+#endif //S_IWUSR
+
 #else
+// !defined(ZIP_STD)
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
-#endif
+#endif //ZIP_STD
 
 #ifdef ZIP_STD
 #include <time.h>
 #define DECLARE_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
 #ifndef MAX_PATH
 #define MAX_PATH 1024
-#endif
-typedef unsigned long DWORD;
-typedef char TCHAR;
-typedef FILE* HANDLE;
-typedef time_t FILETIME;
-#endif
+#endif //MAX_PATH
 
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+// Ugly hack.  This file is included from ZipArchive.cpp, which also includes
+// <osg/GL>, which in turn pulls <w32api/windows.h> when compiling on
+// Cygwin against w32api.  In that situation, minwindef gives us 
+// DWORD, HANDLE, and FILETIME, even though we have them here.  Therefore,
+// shadow the Windows definitions with our own.
+#define FILETIME OSG_ZIP_FILETIME
+#define DWORD OSG_ZIP_DWORD
+#define HANDLE OSG_ZIP_HANDLE
+#endif //OSG_HACK_RENAME_READERWRITER_INTERNALS
+
+typedef unsigned long DWORD;
+typedef FILE* HANDLE;
+typedef char TCHAR;
+typedef time_t FILETIME;
+#endif //ZIP_STD
 
 #ifndef _zip_H
 DECLARE_HANDLE(HZIP);
@@ -274,7 +293,7 @@ bool IsZipHandleU(HZIP hz);
 #else
 #define CloseZip CloseZipU
 #define FormatZipMessage FormatZipMessageU
-#endif
+#endif //_zip_H
 
 
 
