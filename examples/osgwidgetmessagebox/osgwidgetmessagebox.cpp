@@ -12,6 +12,11 @@
 #include <osg/io_utils>
 #include <iostream>
 
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#undef MessageBox
+#define MessageBox OSG_Widget_MessageBox
+#endif
+
 const unsigned int MASK_2D = 0xF0000000;
 
 class MessageBox
