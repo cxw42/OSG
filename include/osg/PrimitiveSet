@@ -310,6 +310,10 @@ class OSG_EXPORT DrawArrays : public PrimitiveSet
         GLsizei _count;
 };
 
+/// Make multiple DrawArrays calls over consecutive runs of the vertices.
+/// The first DrawArrays is [first, first+[0]), the next is 
+/// [first+[0], first+[0]+[1]), and so on.
+/// Source: http://osg-users.openscenegraph.narkive.com/V5hm6CMP/using-osg-drawarraylengths-problem#post2
 class OSG_EXPORT DrawArrayLengths : public PrimitiveSet, public VectorGLsizei
 {
     public:
