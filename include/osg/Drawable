@@ -72,6 +72,9 @@ class ArrayDispatchers;
  *  be rendered is implemented as a class derived from \c Drawable. The
  *  \c Drawable class contains no drawing primitives, since these are provided
  *  by subclasses such as \c osg::Geometry.
+ *  <p><b>Note that the following paragraph is out of date!  A \c Drawable
+ *  actually is a \c Node.  Source:
+ *  <https://groups.google.com/forum/#!topic/osg-users/as4nb6GPLvw>.</b>
  *  <p>Notice that a \c Drawable is not a \c Node, and therefore it cannot be
  *  directly added to a scene graph. Instead, <tt>Drawable</tt>s are attached to
  *  <tt>Geode</tt>s, which are scene graph nodes.
