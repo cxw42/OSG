@@ -23,9 +23,8 @@
 namespace osgText {
 
 // ********************************  HACK  **********************************
-// Following class is needed to work around a DLL export problem. See file
-// include/osg/PrimitiveSet for details.
-
+/// A class needed to work around a DLL export problem. See file
+/// include/osg/PrimitiveSet for details.
 class VectorUInt: public std::vector<unsigned int>
 {
     typedef std::vector<value_type> vector_type;
@@ -46,23 +45,20 @@ class OSGTEXT_EXPORT String : public VectorUInt
 
         typedef VectorUInt vector_type;
 
-        /**
-         * Types of string encodings supported
-         */
+        /// Types of string encodings supported
         enum Encoding
         {
-            ENCODING_UNDEFINED,                 /// not using Unicode
-            ENCODING_ASCII = ENCODING_UNDEFINED,/// unsigned char ASCII
-            ENCODING_UTF8,                      /// 8-bit unicode transformation format
-            ENCODING_UTF16,                     /// 16-bit signature
-            ENCODING_UTF16_BE,                  /// 16-bit big-endian
-            ENCODING_UTF16_LE,                  /// 16-bit little-endian
-            ENCODING_UTF32,                     /// 32-bit signature
-            ENCODING_UTF32_BE,                  /// 32-bit big-endian
-            ENCODING_UTF32_LE,                  /// 32-bit little-endian
-            ENCODING_SIGNATURE                  /// detect encoding from signature
+            ENCODING_UNDEFINED,                 ///< not using Unicode
+            ENCODING_ASCII = ENCODING_UNDEFINED,///< unsigned char ASCII
+            ENCODING_UTF8,                      ///< 8-bit unicode transformation format
+            ENCODING_UTF16,                     ///< 16-bit signature
+            ENCODING_UTF16_BE,                  ///< 16-bit big-endian
+            ENCODING_UTF16_LE,                  ///< 16-bit little-endian
+            ENCODING_UTF32,                     ///< 32-bit signature
+            ENCODING_UTF32_BE,                  ///< 32-bit big-endian
+            ENCODING_UTF32_LE,                  ///< 32-bit little-endian
+            ENCODING_SIGNATURE                  ///< detect encoding from signature
         };
-
 
         String() {}
         String(const String& str);
@@ -74,22 +70,20 @@ class OSGTEXT_EXPORT String : public VectorUInt
 
         void set(const std::string& str);
 
-        /** Set the text using a wchar_t string,
-          * which is converted to an internal TextString.*/
+        /// Set the text using a wchar_t string, which is converted to an 
+        /// internal TextString.
         void set(const wchar_t* text);
 
-        /** Set the text using a Unicode encoded std::string, which is converted to an internal TextString.
-          * The encoding parameter specifies which Unicode encoding is used in the std::string. */
+        /// Set the text using a Unicode encoded std::string, which is 
+        /// converted to an internal TextString.
+        /// \param encoding which Unicode encoding is used in the std::string
         void set(const std::string& text,Encoding encoding);
 
-        /** returns a UTF8 encoded version of this osgText::String.*/
+        /// returns a UTF8 encoded version of this osgText::String.
         std::string createUTF8EncodedString() const;
-
-    protected:
 
 };
 
 }
-
 
 #endif
