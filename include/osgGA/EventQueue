@@ -44,10 +44,18 @@ class OSGGA_EXPORT EventQueue : public osg::Referenced
         /** Set events.*/
         void setEvents(Events& events);
 
-        /** Take the entire event queue leaving the EventQueue' event queue empty.*/
+        /// Moves all the events from this EventQueue instance *into* events.
+        /// Leaves the EventQueue's event queue empty.
+        /// \param [out] events  The container to fill with the events that
+        ///                      are being moved out of this EventQueue.
         bool takeEvents(Events& events);
 
-        /** Take the events that were recorded before with specified time queue.*/
+        /// Moves events up to cutOffTime from this EventQueue instance
+        /// *into* events.  Removes the moved events from this EventQueue.
+        /// \param [out] events  The container to fill with the events that
+        ///                      are being moved out of this EventQueue.
+        /// \param [in] cutOffTime  An event will be moved if it has
+        ///                         `getTime() <= cutOffTime`.
         bool takeEvents(Events& events, double cutOffTime);
 
         /** Take a copy the entire event queue leaving the EventQueue' event queue intact.*/
