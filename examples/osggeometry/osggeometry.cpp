@@ -441,7 +441,7 @@ osg::Node* createScene()
         geode->addDrawable(polyGeom);
     }
 
-    // create TRIANGLES, TRIANGLE_STRIP and TRIANGLE_FAN all in one Geometry/
+    // create TRIANGLES, TRIANGLE_STRIP and TRIANGLE_FAN all in one Geometry.
     {
         // create Geometry object to store all the vertices and lines primitive.
         osg::Geometry* polyGeom = new osg::Geometry();
@@ -517,6 +517,25 @@ osg::Node* createScene()
         geode->addDrawable(polyGeom);
     }
 
+    // Create some decorative corners using DrawArrayLengths to wrap
+    // multiple calls to glDrawArrays.
+    {
+        // create Geometry object to store all the vertices and the primitive.
+        osg::Geometry* polyGeom = new osg::Geometry();
+
+        // TODO add vertices to polyGeom
+
+        osg::DrawArrayLengths* prims = new osg::DrawArrayLengths(
+            osg::PrimitiveSet::TRIANGLES, 0, 2);    //2 arrays
+        prims->push_back(1);    // TODO set array lengths
+        prims->push_back(1);
+        polyGeom->addPrimitiveSet(prims);
+
+        printTriangles("Triangle Strips",*polyGeom);
+
+        // add the points geometry to the geode.
+        geode->addDrawable(polyGeom);
+    }
     // Turn off the lighting on the geode.  This is not required for setting up
     // the geometry.  However, by default, lighting is on, and so the normals
     // above are used to light the geometry.
