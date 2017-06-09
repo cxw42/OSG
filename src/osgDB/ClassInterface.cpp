@@ -385,7 +385,7 @@ bool ClassInterface::copyPropertyDataToObject(osg::Object* object, const std::st
     }
     else
     {
-        OSG_INFO<<"ClassInterface::copyPropertyDataFromObject() no serializer available."<<std::endl;
+        OSG_INFO<<"ClassInterface::copyPropertyDataToObject() no serializer available."<<std::endl;
         return false;
     }
 }
