@@ -3358,18 +3358,20 @@ bool LuaScriptEngine::getfields(int pos, const char* f1, const char* f2, const c
     return true;
 }
 
+/// Get the specified number of elements from the table at position pos and
+/// leave the elements on the stack, as long as they are of the given type.
 bool LuaScriptEngine::getelements(int pos, int numElements, int type) const
 {
     int abs_pos = getAbsolutePos(pos);
     for(int i=0; i<numElements; ++i)
     {
-        lua_pushinteger(_lua, i);
+        lua_pushinteger(_lua, i+1);
+            // +1 because Lua tables with numeric indices are 1-based
         lua_gettable(_lua, abs_pos);
         if (lua_type(_lua, -1)!=type) { lua_pop(_lua, i+1); return false; }
     }
     return true;
 }
-
 
 osgDB::BaseSerializer::Type LuaScriptEngine::getType(int pos) const
 {
