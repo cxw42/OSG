@@ -7,7 +7,7 @@
 #include <osgDB/OutputStream>
 
 /// A convenience method to get the simulation time.
-/// Returns 0.0 if the framestamp is not available.
+/// Always succeeds; returns 0.0 if the framestamp is not available.
 /// No input parameters; one output parameter (double sim_time).
 struct NodeVisitorGetSimulationTime : public osgDB::MethodObject
 {
@@ -17,7 +17,7 @@ struct NodeVisitorGetSimulationTime : public osgDB::MethodObject
     {
         double sim_time = 0.0;
 
-        osg::NodeVisitor* nv = dynamic_cast<osg::NodeVisitor*>(objectPtr);
+        osg::NodeVisitor* nv = objectPtr->asNodeVisitor();
 
         if(nv)
         {
