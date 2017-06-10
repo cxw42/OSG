@@ -116,6 +116,7 @@ static int setProperty(lua_State* _lua)
 //
 //  Vector container support
 //
+
 static int getContainerProperty(lua_State * _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -330,6 +331,9 @@ static int callVectorAdd(lua_State* _lua)
 //
 //  Map container support
 //
+
+/// Lua CFunction for __index.
+/// \return the number of result values pushed on the Lua stack.
 static int getMapProperty(lua_State * _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -383,7 +387,8 @@ static int getMapProperty(lua_State * _lua)
     return 0;
 }
 
-
+/// Lua CFunction for __newindex.
+/// \return the number of result values pushed on the Lua stack.
 static int setMapProperty(lua_State* _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -445,7 +450,7 @@ static int callMapClear(lua_State* _lua)
     osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
     std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
 
-    // check to see if Object "is a" vector
+    // check to see if Object "is a" map
     osgDB::BaseSerializer::Type type;
     osgDB::BaseSerializer* bs = lse->getClassInterface().getSerializer(object, containerPropertyName, type);
     osgDB::MapBaseSerializer* ms = dynamic_cast<osgDB::MapBaseSerializer*>(bs);
@@ -467,7 +472,7 @@ static int getMapSize(lua_State* _lua)
     osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
     std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
 
-    // check to see if Object "is a" vector
+    // check to see if Object "is a" map
     osgDB::BaseSerializer::Type type;
     osgDB::BaseSerializer* bs = lse->getClassInterface().getSerializer(object, containerPropertyName, type);
     osgDB::MapBaseSerializer* ms = dynamic_cast<osgDB::MapBaseSerializer*>(bs);
@@ -661,6 +666,15 @@ static std::string convertStateAttributeValueToString(unsigned int value, bool w
     return valueString;
 }
 
+/// Lua CFunction for StateSet:set()
+/// \pre    The Lua stack contains a table representing an osg::Object
+///         and at least one other parameter.  Possible parameter configurations
+///         are:
+///         \li modestring [, value]
+///         \li uniform [, value]
+///         \li attribute [,value]
+///         \li textureUnit, textureAttribute [, value]
+/// \return The number of result values pushed on the Lua stack (always 0)
 static int callStateSetSet(lua_State* _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -1256,7 +1270,8 @@ static int callImageR(lua_State* _lua)
     return 1;
 }
 
-// conversion of a lua value/table to a std::string, supports recursion when tables contain tables
+/// Convert a lua value/table to a std::string.  Used by tostring().
+/// Supports recursion when tables contain tables.
 static std::string cpp_tostring(lua_State* _lua, int index)
 {
     if (!lua_istable(_lua, index))
@@ -1349,6 +1364,8 @@ static std::string cpp_tostring(lua_State* _lua, int index)
     return str;
 }
 
+/// Lua CFunction for __tostring.
+/// \return 1, the number of result values pushed on the Lua stack.
 static int tostring(lua_State* _lua)
 {
     lua_pushstring(_lua, cpp_tostring(_lua,-1) .c_str());
@@ -1377,8 +1394,6 @@ static int callImageGet(lua_State* _lua)
 
     const unsigned char* ptr = image->data(image_i,image_j,image_k);
     unsigned int numComponents = osg::Image::computeNumComponents(image->getPixelFormat());
-
-    // OSG_NOTICE<<"Need to implement Image::get("<<i<<", "<<j<<", "<<k<<") ptr="<<(void*)ptr<<", numComponents="<<numComponents<<std::endl;
 
     osg::Vec4d colour;
     switch(image->getDataType())
@@ -1724,6 +1739,14 @@ static int garabageCollectObject(lua_State* _lua)
     return 0;
 }
 
+/// Create a new osg::Object.  Available as the Lua global "new".
+/// \pre    The Lua stack has exactly one argument on it, which is a
+///         string naming the class to create (e.g., "osg::Geometry").
+/// \return The number of result values pushed on the Lua stack: 1 if the
+///         instance was successfully created; 0 otherwise
+///
+/// \note   See http://pgl.yoyo.org/luai/i/lua_CFunction for the calling
+///         conventions for this and other lua_cclosure functions.
 static int newObject(lua_State * _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -1859,7 +1882,7 @@ LuaScriptEngine::~LuaScriptEngine()
     lua_close(_lua);
 }
 
-std::string LuaScriptEngine::createUniquieScriptName()
+std::string LuaScriptEngine::createUniqueScriptName()
 {
     std::stringstream sstr;
     sstr<<"script_"<<_scriptCount;
@@ -1868,62 +1891,66 @@ std::string LuaScriptEngine::createUniquieScriptName()
     return sstr.str();
 }
 
+/// Set up the Lua engine and create the global functions and metatables.
 void LuaScriptEngine::initialize()
 {
     _lua = luaL_newstate();
 
     luaL_openlibs(_lua);
 
-    // provide global new method for creating osg::Object's.
+    // provide global "new" method for creating osg::Object's.
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, newObject, 1);
         lua_setglobal(_lua, "new");
     }
 
-    // provide global new method for casting osg::Object's.
+    // provide global "cast" method for casting osg::Object's.
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, castObject, 1);
         lua_setglobal(_lua, "cast");
     }
 
-    // provide global new method for reading Objects
+    // provide global "readFile" method for reading Objects
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, readObjectFile, 1);
         lua_setglobal(_lua, "readFile");
     }
 
-    // provide global new method for reading Objects
+    // provide global "readObjectFile" method for reading Objects -
+    // identical to "readFile".
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, readObjectFile, 1);
         lua_setglobal(_lua, "readObjectFile");
     }
 
-    // provide global new method for reading Nodes
+    // provide global "readNodeFile" method for reading Nodes
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, readNodeFile, 1);
         lua_setglobal(_lua, "readNodeFile");
     }
 
-    // provide global new method for read Images
+    // provide global "readImageFile" method for reading Images
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, readImageFile, 1);
         lua_setglobal(_lua, "readImageFile");
     }
 
-    // provide global new method for read Images
+    // provide global "writeFile" method for writing osg::Object's
     {
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, writeFile, 1);
         lua_setglobal(_lua, "writeFile");
     }
 
-    // Set up the __newindex and __index methods for looking up implementations of Object properties
+    // Set up the __newindex and __index methods for looking up implementations
+    // of Object properties.  This metatable is used for most objects that
+    // are not vectors or maps - \see LuaScriptEngine::pushObject().
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Object");
 
@@ -1945,7 +1972,10 @@ void LuaScriptEngine::initialize()
         lua_pop(_lua,1);
     }
 
-    // Set up the __tostring methods to be able to convert tables into strings so they can be output for debugging purposes.
+    // Set up the __tostring methods to be able to convert tables into strings
+    // so they can be output for debugging purposes.
+    // LuaScriptEngine.Table is used for matrices, bounding boxes/spheres,
+    // and other basic data that doesn't require a special getter or setter.
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Table");
 
@@ -1957,7 +1987,9 @@ void LuaScriptEngine::initialize()
         lua_pop(_lua,1);
     }
 
-    // Set up the __newindex and __index methods for looking up implementations of Object properties
+    // Set up the __newindex and __index methods for looking up implementations
+    // of Container (e.g., vector) properties.  These are supported by
+    // osgDB::VectorBaseSerializer.
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Container");
 
@@ -1974,7 +2006,9 @@ void LuaScriptEngine::initialize()
         lua_pop(_lua,1);
     }
 
-    // Set up the __newindex and __index methods for looking up implementations of Object properties
+    // Set up the __newindex and __index methods for looking up implementations
+    // of Map (e.g., vector) properties.  These are supported by
+    // osgDB::MapBaseSerializer.
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Map");
 
@@ -1991,7 +2025,11 @@ void LuaScriptEngine::initialize()
         lua_pop(_lua,1);
     }
 
-    // Set up the __gc methods for looking up implementations of Object pointer to do the unref when the associated Lua object is destroyed.
+    // Set up the __gc methods for looking up implementations of Object
+    // pointer to do the unref when the associated Lua object is destroyed.
+    // Each Lua object has an "object_ptr" member that calls
+    // Referenced::unref() on the corresponding osg::Object.
+    // \see LuaScriptEngine::pushObject().
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.UnrefObject");
         lua_pushstring(_lua, "__gc");
@@ -2010,7 +2048,7 @@ bool LuaScriptEngine::loadScript(osg::Script* script)
     int loadResult = luaL_loadstring(_lua, script->getScript().c_str());
     if (loadResult==0)
     {
-        std::string scriptID = createUniquieScriptName();
+        std::string scriptID = createUniqueScriptName();
 
         lua_pushvalue(_lua, -1);
         lua_setglobal(_lua, scriptID.c_str());
@@ -2115,25 +2153,25 @@ public:
     virtual void apply(const osg::Vec3b& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec4b& value)         { _lse->pushValue(value); }
 
-    virtual void apply(const osg::Vec2ub& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec3ub& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec4ub& value)         { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec2ub& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec3ub& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec4ub& value)        { _lse->pushValue(value); }
 
     virtual void apply(const osg::Vec2s& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec3s& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec4s& value)         { _lse->pushValue(value); }
 
-    virtual void apply(const osg::Vec2us& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec3us& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec4us& value)         { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec2us& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec3us& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec4us& value)        { _lse->pushValue(value); }
 
     virtual void apply(const osg::Vec2i& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec3i& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec4i& value)         { _lse->pushValue(value); }
 
-    virtual void apply(const osg::Vec2ui& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec3ui& value)         { _lse->pushValue(value); }
-    virtual void apply(const osg::Vec4ui& value)         { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec2ui& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec3ui& value)        { _lse->pushValue(value); }
+    virtual void apply(const osg::Vec4ui& value)        { _lse->pushValue(value); }
 
     virtual void apply(const osg::Vec2f& value)         { _lse->pushValue(value); }
     virtual void apply(const osg::Vec3f& value)         { _lse->pushValue(value); }
@@ -2150,7 +2188,7 @@ public:
 };
 
 #if LUA_VERSION_NUM<=501
-    #define lua_rawlen lua_strlen
+#define lua_rawlen lua_strlen
 #endif
 
 class GetStackValueVisitor : public osg::ValueObject::SetValueVisitor
@@ -2372,7 +2410,7 @@ int LuaScriptEngine::pushPropertyToStack(osg::Object* object, const std::string&
         case(osgDB::BaseSerializer::RW_QUAT): if (getPropertyAndPushValue<osg::Quat>(object, propertyName)) return 1; break;
         case(osgDB::BaseSerializer::RW_PLANE): if (getPropertyAndPushValue<osg::Plane>(object, propertyName)) return 1; break;
 
-        #ifdef OSG_USE_FLOAT_MATRIX
+#ifdef OSG_USE_FLOAT_MATRIX
         case(osgDB::BaseSerializer::RW_MATRIX):
 #endif
         case(osgDB::BaseSerializer::RW_MATRIXF):
@@ -2902,7 +2940,7 @@ int LuaScriptEngine::getDataFromStack(SerializerScratchPad* ssp, osgDB::BaseSeri
         case(osgDB::BaseSerializer::RW_QUAT): if (getDataFromStack<osg::Quat>(ssp, pos)) return 0; break;
         case(osgDB::BaseSerializer::RW_PLANE): if (getDataFromStack<osg::Plane>(ssp, pos)) return 0; break;
 
-        #ifdef OSG_USE_FLOAT_MATRIX
+#ifdef OSG_USE_FLOAT_MATRIX
         case(osgDB::BaseSerializer::RW_MATRIX):
 #endif
         case(osgDB::BaseSerializer::RW_MATRIXF):
@@ -3013,10 +3051,10 @@ int LuaScriptEngine::getDataFromStack(SerializerScratchPad* ssp, osgDB::BaseSeri
     }
     OSG_NOTICE<<"LuaScriptEngine::getDataFromStack() property of type = "<<_ci.getTypeName(type)<<" not matched"<<std::endl;
     return 0;
-
 }
 
-
+/// Set the named property of the object from the Lua stack.
+/// \return the number of result values pushed on the Lua stack (generally 0).
 int LuaScriptEngine::setPropertyFromStack(osg::Object* object, const std::string& propertyName) const
 {
     osgDB::BaseSerializer::Type type;
@@ -3047,6 +3085,9 @@ int LuaScriptEngine::setPropertyFromStack(osg::Object* object, const std::string
     return setPropertyFromStack(object, propertyName, type);
 }
 
+/// Set the named property of the object from the Lua stack, given the type
+/// of the property from the serializer for the object.
+/// \return the number of result values pushed on the Lua stack (generally 0).
 int LuaScriptEngine::setPropertyFromStack(osg::Object* object, const std::string& propertyName, osgDB::BaseSerializer::Type type) const
 {
     switch(type)
@@ -3299,13 +3340,13 @@ int LuaScriptEngine::setPropertyFromStack(osg::Object* object, const std::string
         }
         case(osgDB::BaseSerializer::RW_LIST):
         default:
+            OSG_NOTICE<<"LuaScriptEngine::setPropertyFromStack("<<object<<", "<<propertyName<<") property of type = "<<_ci.getTypeName(type)<<" not implemented"<<std::endl;
+            return 0;
             break;
     }
-    OSG_NOTICE<<"LuaScriptEngine::setPropertyFromStack("<<object<<", "<<propertyName<<") property of type = "<<_ci.getTypeName(type)<<" not implemented"<<std::endl;
+    OSG_NOTICE<<"LuaScriptEngine::setPropertyFromStack("<<object<<", "<<propertyName<<") property of type = "<<_ci.getTypeName(type)<<": unable to set property"<<std::endl;
     return 0;
 }
-
-
 
 bool LuaScriptEngine::getfields(int pos, const char* f1, const char* f2, int type) const
 {
@@ -3926,13 +3967,21 @@ void LuaScriptEngine::createAndPushObject(const std::string& compoundName) const
     object.release();
 }
 
+/// Create and push a Lua object to represent an osg::Object.
+/// \param[in] object   The osg::Object to wrap, or 0.
+/// \post   The Lua stack top has a nil, if object was 0,
+///         or a table that is the new Lua object.
 void LuaScriptEngine::pushObject(osg::Object* object) const
 {
-    if (object)
+    if (!object)
+    {
+        lua_pushnil(_lua);
+    }
+    else
     {
         lua_newtable(_lua);
 
-        // set up objbect_ptr to handle ref/unref of the object
+        // set up object_ptr to handle ref/unref of the object
         {
             lua_pushstring(_lua, "object_ptr");
 
@@ -3945,7 +3994,8 @@ void LuaScriptEngine::pushObject(osg::Object* object) const
 
             lua_settable(_lua, -3);
 
-            // increment the reference count as the lua now will unreference it once it's finished with the userdata for the pointer
+            // increment the reference count as the lua now will unreference
+            // it once it's finished with the userdata for the pointer
             object->ref();
         }
 
@@ -4013,10 +4063,6 @@ void LuaScriptEngine::pushObject(osg::Object* object) const
             lua_setmetatable(_lua, -2);
         }
     }
-    else
-    {
-        lua_pushnil(_lua);
-    }
 }
 
 void LuaScriptEngine::pushAndCastObject(const std::string& compoundClassName, osg::Object* object) const
@@ -4060,11 +4106,17 @@ void LuaScriptEngine::pushAndCastObject(const std::string& compoundClassName, os
     }
 }
 
+/// Assign the given function as a named member of a Lua table.
+/// \pre                The Lua stack top points to a Lua table
+/// \param[in]  name    The name, accessible in Lua code
+/// \param[in]  fn      The C function to call
+/// \post               The Lua stack is unchanged, with the table still on top
 void LuaScriptEngine::assignClosure(const char* name, lua_CFunction fn) const
 {
     lua_pushstring(_lua, name);
     lua_pushlightuserdata(_lua, const_cast<LuaScriptEngine*>(this));
     lua_pushcclosure(_lua, fn, 1);
+        // 1 => fn has access to the light userdata
     lua_settable(_lua, -3);
 }
 
