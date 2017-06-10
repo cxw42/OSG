@@ -424,14 +424,13 @@ class LuaScriptEngine : public osg::ScriptEngine
         lua_State* _lua;
 
         unsigned int _scriptCount;
-        std::string createUniquieScriptName();
+        std::string createUniqueScriptName();
 
         typedef std::map< osg::ref_ptr<osg::Script>, std::string> ScriptMap;
         ScriptMap _loadedScripts;
 
         mutable osgDB::ClassInterface _ci;
 };
-
 
 }
 
