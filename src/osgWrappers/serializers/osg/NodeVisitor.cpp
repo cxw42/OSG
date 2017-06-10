@@ -19,10 +19,11 @@ struct NodeVisitorGetSimulationTime : public osgDB::MethodObject
 
         // The actual visitor might be something other than an
         // osg::NodeVisitor, e.g., an osgUtil::UpdateVisitor.
-        // However, the osg::Parameters always hold osg::Object*,
-        // so we can safely reinterpret_cast to that.  Then we can
-        // dynamic_cast to osg::NodeVisitor* regardless of what the
-        // concrete type of NodeVisitor is.
+        // However, this is called (indirectly) via an osg::CallbackObject.
+        // osg::CallbackObject::run() takes an osg::Object*, so the objectPtr
+        // here is actually osg::Object*.  Therefore, we can safely
+        // reinterpret_cast to that.  Then we can dynamic_cast to
+        // osg::NodeVisitor* regardless of the concrete type of NodeVisitor.
         osg::NodeVisitor* nv =
             dynamic_cast<osg::NodeVisitor*>(
                     reinterpret_cast<osg::Object*>(objectPtr)
