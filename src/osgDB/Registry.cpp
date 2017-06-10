@@ -1026,7 +1026,7 @@ std::string Registry::findDataFileImplementation(const std::string& filename, co
 
     if (absolutePath && fileExists(filename))
     {
-        OSG_DEBUG << "FindFileInPath(" << filename << "): returning " << filename << std::endl;
+        OSG_DEBUG << "findDataFileImplementation(" << filename << "): returning absolute path " << filename << std::endl;
         return filename;
     }
 
@@ -1074,7 +1074,7 @@ std::string Registry::findDataFileImplementation(const std::string& filename, co
 
         if(fileExists(simpleFileName))
         {
-            OSG_DEBUG << "FindFileInPath(" << filename << "): returning " << simpleFileName << std::endl;
+            OSG_DEBUG << "findDataFileImplementation(" << filename << "): returning simple filename " << simpleFileName << std::endl;
             return simpleFileName;
         }
 
@@ -1110,7 +1110,7 @@ std::string Registry::findLibraryFileImplementation(const std::string& filename,
 
     if(fileExists(filename))
     {
-        OSG_DEBUG << "FindFileInPath(" << filename << "): returning " << filename << std::endl;
+        OSG_DEBUG << "findLibraryFileImplementation(" << filename << "): returning " << filename << std::endl;
         return filename;
     }
 
