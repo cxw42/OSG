@@ -572,7 +572,7 @@ bool ClassInterface::isObjectOfType(const osg::Object* object, const std::string
     return false;
 }
 
-bool ClassInterface::run(void* objectPtr, const std::string& compoundClassName, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+bool ClassInterface::run(osg::Object* objectPtr, const std::string& compoundClassName, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
 {
     ObjectWrapper* ow = osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper(compoundClassName);
     if (!ow) return false;

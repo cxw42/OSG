@@ -6,12 +6,39 @@
 #include <osgDB/InputStream>
 #include <osgDB/OutputStream>
 
+/// A convenience method to get the simulation time.
+/// Returns 0.0 if the framestamp is not available.
+/// No input parameters; one output parameter (double sim_time).
+struct NodeVisitorGetSimulationTime : public osgDB::MethodObject
+{
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters - none used
+                      , osg::Parameters& outputParameters) const
+    {
+        double sim_time = 0.0;
 
+        osg::NodeVisitor* nv = dynamic_cast<osg::NodeVisitor*>(objectPtr);
+
+        if(nv)
+        {
+            const osg::FrameStamp *fs = nv->getFrameStamp();
+            if(fs) sim_time = fs->getSimulationTime();
+        }
+
+        outputParameters.push_back(
+            new osg::DoubleValueObject("return", sim_time));
+        return true;
+    }
+};
+
+
+/// The object wrapper for NodeVisitor
 REGISTER_OBJECT_WRAPPER( NodeVistor,
                          new osg::NodeVisitor,
                          osg::NodeVisitor,
                          "osg::Object osg::NodeVisitor" )
 {
+    // Serialization
     BEGIN_ENUM_SERIALIZER( TraversalMode, TRAVERSE_NONE );
         ADD_ENUM_VALUE( TRAVERSE_NONE );
         ADD_ENUM_VALUE( TRAVERSE_PARENTS );
@@ -29,8 +56,10 @@ REGISTER_OBJECT_WRAPPER( NodeVistor,
 
     ADD_UINT_SERIALIZER(TraversalMask, 0xffffffff);
     ADD_UINT_SERIALIZER(TraversalNumber, 0);
-}
 
+    // Custom methods
+    ADD_METHOD_OBJECT( "getSimulationTime", NodeVisitorGetSimulationTime );
+}
 
 #undef OBJECT_CAST
 #define OBJECT_CAST static_cast
