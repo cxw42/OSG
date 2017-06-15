@@ -8,26 +8,17 @@
 
 /// A convenience method to get the simulation time.
 /// Returns 0.0 if the framestamp is not available.
-/// TODO replace this with full access to the FrameStamp.
+/// No input parameters; one output parameter (double sim_time).
+/// TODO? replace this with full access to FrameStamp
 struct NodeVisitorGetSimulationTime : public osgDB::MethodObject
 {
-    virtual bool run(   void* objectPtr
-                      , osg::Parameters& //inputParameters
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters - none used
                       , osg::Parameters& outputParameters) const
     {
         double sim_time = 0.0;
 
-        // The actual visitor might be something other than an
-        // osg::NodeVisitor, e.g., an osgUtil::UpdateVisitor.
-        // However, this is called (indirectly) via an osg::CallbackObject.
-        // osg::CallbackObject::run() takes an osg::Object*, so the objectPtr
-        // here is actually osg::Object*.  Therefore, we can safely
-        // reinterpret_cast to that.  Then we can dynamic_cast to
-        // osg::NodeVisitor* regardless of the concrete type of NodeVisitor.
-        osg::NodeVisitor* nv =
-            dynamic_cast<osg::NodeVisitor*>(
-                    reinterpret_cast<osg::Object*>(objectPtr)
-            );
+        osg::NodeVisitor* nv = dynamic_cast<osg::NodeVisitor*>(objectPtr);
 
         if(nv)
         {
@@ -70,7 +61,6 @@ REGISTER_OBJECT_WRAPPER( NodeVistor,
     // Custom methods
     ADD_METHOD_OBJECT( "getSimulationTime", NodeVisitorGetSimulationTime );
 }
-
 
 #undef OBJECT_CAST
 #define OBJECT_CAST static_cast

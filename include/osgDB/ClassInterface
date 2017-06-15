@@ -18,6 +18,7 @@
 #include <osgDB/ObjectWrapper>
 #include <osgDB/Registry>
 #include <osg/ValueObject>
+#include <osg/Object>
 
 namespace osgDB
 {
@@ -161,7 +162,7 @@ public:
 
 
     /// run method of object
-    bool run(void* objectPtr, const std::string& compoundClassName, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const;
+    bool run(osg::Object* objectPtr, const std::string& compoundClassName, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const;
 
     /// run method of object
     bool run(osg::Object* object, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const;

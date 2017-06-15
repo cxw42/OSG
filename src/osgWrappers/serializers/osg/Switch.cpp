@@ -6,7 +6,7 @@
 
 struct SwitchGetValue : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
@@ -21,7 +21,7 @@ struct SwitchGetValue : public osgDB::MethodObject
             if (uivo) index = uivo->getValue();
         }
 
-        osg::Switch* sw = reinterpret_cast<osg::Switch*>(objectPtr);
+        osg::Switch* sw = dynamic_cast<osg::Switch*>(objectPtr);
         outputParameters.push_back(new osg::BoolValueObject("return", sw->getValue(index)));
 
         return true;
@@ -31,7 +31,7 @@ struct SwitchGetValue : public osgDB::MethodObject
 
 struct SwitchSetValue : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.size()<2) return false;
 
@@ -72,7 +72,7 @@ struct SwitchSetValue : public osgDB::MethodObject
             }
         }
 
-        osg::Switch* sw = reinterpret_cast<osg::Switch*>(objectPtr);
+        osg::Switch* sw = dynamic_cast<osg::Switch*>(objectPtr);
         sw->setValue(index, enabled);
 
         return true;

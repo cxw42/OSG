@@ -18,6 +18,7 @@
 #include <OpenThreads/ReentrantMutex>
 #include <osgDB/Serializer>
 #include <osg/ScriptEngine>
+#include <osg/Object>
 
 namespace osgDB
 {
@@ -26,7 +27,7 @@ struct MethodObject : public osg::Referenced
 {
     typedef std::vector< osg::ref_ptr<osg::Object> > Parameters;
 
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const = 0;
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const = 0;
 
     virtual ~MethodObject() {}
 };
