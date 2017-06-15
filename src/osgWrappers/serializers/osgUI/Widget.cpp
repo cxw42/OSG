@@ -7,9 +7,9 @@
 
 struct Traverse : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
     {
-        osgUI::Widget* widget = reinterpret_cast<osgUI::Widget*>(objectPtr);
+        osgUI::Widget* widget = dynamic_cast<osgUI::Widget*>(objectPtr);
         osg::NodeVisitor* nv = (inputParameters.size()>=1) ? dynamic_cast<osg::NodeVisitor*>(inputParameters[0].get()) : 0;
         if (!nv) return false;
         widget->traverse(*nv);
@@ -19,9 +19,9 @@ struct Traverse : public osgDB::MethodObject
 
 struct TraverseImplementation : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
     {
-        osgUI::Widget* widget = reinterpret_cast<osgUI::Widget*>(objectPtr);
+        osgUI::Widget* widget = dynamic_cast<osgUI::Widget*>(objectPtr);
         osg::NodeVisitor* nv = (inputParameters.size()>=1) ? dynamic_cast<osg::NodeVisitor*>(inputParameters[0].get()) : 0;
         if (!nv) return false;
         widget->traverseImplementation(*nv);
@@ -31,9 +31,9 @@ struct TraverseImplementation : public osgDB::MethodObject
 
 struct Handle : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
     {
-        osgUI::Widget* widget = reinterpret_cast<osgUI::Widget*>(objectPtr);
+        osgUI::Widget* widget = dynamic_cast<osgUI::Widget*>(objectPtr);
         osgGA::EventVisitor* ev = (inputParameters.size()>=1) ? dynamic_cast<osgGA::EventVisitor*>(inputParameters[0].get()) : 0;
         osgGA::Event* event = (inputParameters.size()>=2) ? dynamic_cast<osgGA::Event*>(inputParameters[1].get()) : 0;
         if (!widget || !ev || !event) return false;
@@ -44,9 +44,9 @@ struct Handle : public osgDB::MethodObject
 
 struct HandleImplementation : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters&) const
     {
-        osgUI::Widget* widget = reinterpret_cast<osgUI::Widget*>(objectPtr);
+        osgUI::Widget* widget = dynamic_cast<osgUI::Widget*>(objectPtr);
         osgGA::EventVisitor* ev = (inputParameters.size()>=1) ? dynamic_cast<osgGA::EventVisitor*>(inputParameters[0].get()) : 0;
         osgGA::Event* event = (inputParameters.size()>=2) ? dynamic_cast<osgGA::Event*>(inputParameters[1].get()) : 0;
         if (!widget || !ev || !event) return false;

@@ -9,7 +9,7 @@ namespace ArrayWrappers {
 #if 0
 struct ResizeArray : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
@@ -23,7 +23,7 @@ struct ResizeArray : public osgDB::MethodObject
             osg::UIntValueObject* uivo = dynamic_cast<osg::UIntValueObject*>(indexObject);
             if (uivo) index = uivo->getValue();
         }
-        osg::Array* array = reinterpret_cast<osg::Array*>(objectPtr);
+        osg::Array* array = dynamic_cast<osg::Array*>(objectPtr);
         array->resizeArray(index);
 
         return true;
