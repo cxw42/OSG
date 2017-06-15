@@ -34,6 +34,9 @@ class OSGVIEWER_EXPORT Viewer : public ViewerBase, public osgViewer::View
 
         Viewer(const osgViewer::Viewer& viewer, const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
+        /// Public destructor to allow Viewer instances to be allocated
+        /// other places than on the heap.  This permits declaring
+        /// `Viewer viewer;` in a `main()` function, for example.
         virtual ~Viewer();
 
         META_Object(osgViewer,Viewer);
