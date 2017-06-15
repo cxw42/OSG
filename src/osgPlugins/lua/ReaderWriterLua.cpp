@@ -94,6 +94,14 @@ class ReaderWriterLua : public osgDB::ReaderWriter
             return readObjectFromScript(fin, options);
         }
 
+        /// Read an osg::Object from the specified file, or create a
+        /// LuaScriptEngine.
+        /// \param[in] file     The name of the file to read, or
+        ///                     `ScriptEngine.lua` to create and return a
+        ///                     new LuaScriptEngine instance.
+        /// \param[in] options  Any desired options.  If creating a new
+        ///                     LuaScriptEngine, the options are passed to
+        ///                     ReaderWriterLua::createScriptEngine.
         virtual ReadResult readObject(const std::string& file, const osgDB::ReaderWriter::Options* options =NULL) const
         {
             if (file=="ScriptEngine.lua")
@@ -143,7 +151,11 @@ class ReaderWriterLua : public osgDB::ReaderWriter
             return readObjectFromScript(fin, options);
         }
 
-         virtual ReadResult readNode(const std::string& file, const osgDB::ReaderWriter::Options* options =NULL) const
+        /// Read an osg::Node from the specified file, which must exist.
+        /// Unlike ReaderWriterLua::readObject(), this function does not
+        /// recognize `ScriptEngine.lua` as a magic filename to create a
+        /// LuaScriptEngine.
+        virtual ReadResult readNode(const std::string& file, const osgDB::ReaderWriter::Options* options =NULL) const
         {
             std::string ext = osgDB::getLowerCaseFileExtension(file);
             if (!acceptsExtension(ext)) return ReadResult::FILE_NOT_HANDLED;

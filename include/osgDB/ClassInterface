@@ -167,10 +167,10 @@ public:
     /// run method of object
     bool run(osg::Object* object, const std::string& methodName, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const;
 
-    /// checked for support of specificed method
+    /// check for support of specified method
     bool hasMethod(const std::string& compoundClassName, const std::string& methodName) const;
 
-    /// checked for support of specificed method
+    /// check for support of specified method
     bool hasMethod(const osg::Object* object, const std::string& methodName) const;
 
 

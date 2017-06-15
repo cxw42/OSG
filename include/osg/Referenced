@@ -129,6 +129,8 @@ class OSG_EXPORT Referenced
 
     protected:
 
+        /// Protected destructor, so Referenced subclasses generally
+        /// can not be created other than on the heap.
         virtual ~Referenced();
 
         void signalObserversAndDelete(bool signalDelete, bool doDelete) const;

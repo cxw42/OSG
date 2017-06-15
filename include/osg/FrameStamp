@@ -52,8 +52,9 @@ class OSG_EXPORT FrameStamp : public Referenced
         void setCalendarTime(const tm& calendarTime);
         void getCalendarTime(tm& calendarTime) const;
 
-        // keep public to allow it to be permit allocation which is
-        // not on the heap used osgcluster
+        /// Public destructor to allow FrameStamp instances to be allocated
+        /// other places than on the heap.  This is used in the
+        /// osgcluster example.
         virtual ~FrameStamp();
 
     protected:
