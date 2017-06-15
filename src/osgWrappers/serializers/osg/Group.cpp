@@ -36,9 +36,9 @@ static bool writeChildren( osgDB::OutputStream& os, const osg::Group& node )
 
 struct GroupGetNumChildren : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
-        osg::Group* group = reinterpret_cast<osg::Group*>(objectPtr);
+        osg::Group* group = dynamic_cast<osg::Group*>(objectPtr);
         outputParameters.push_back(new osg::UIntValueObject("return", group->getNumChildren()));
         return true;
     }
@@ -46,7 +46,7 @@ struct GroupGetNumChildren : public osgDB::MethodObject
 
 struct GroupGetChild : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
@@ -60,7 +60,7 @@ struct GroupGetChild : public osgDB::MethodObject
             osg::UIntValueObject* uivo = dynamic_cast<osg::UIntValueObject*>(indexObject);
             if (uivo) index = uivo->getValue();
         }
-        osg::Group* group = reinterpret_cast<osg::Group*>(objectPtr);
+        osg::Group* group = dynamic_cast<osg::Group*>(objectPtr);
         outputParameters.push_back(group->getChild(index));
 
         return true;
@@ -69,7 +69,7 @@ struct GroupGetChild : public osgDB::MethodObject
 
 struct GroupSetChild : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.size()<2) return false;
 
@@ -88,7 +88,7 @@ struct GroupSetChild : public osgDB::MethodObject
         osg::Node* child = dynamic_cast<osg::Node*>(inputParameters[1].get());
         if (!child) return false;
 
-        osg::Group* group = reinterpret_cast<osg::Group*>(objectPtr);
+        osg::Group* group = dynamic_cast<osg::Group*>(objectPtr);
         group->setChild(index, child);
 
         return true;
@@ -97,14 +97,14 @@ struct GroupSetChild : public osgDB::MethodObject
 
 struct GroupAddChild : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
         osg::Node* child = dynamic_cast<osg::Node*>(inputParameters[0].get());
         if (!child) return false;
 
-        osg::Group* group = reinterpret_cast<osg::Group*>(objectPtr);
+        osg::Group* group = dynamic_cast<osg::Group*>(objectPtr);
         group->addChild(child);
 
         return true;
@@ -114,14 +114,14 @@ struct GroupAddChild : public osgDB::MethodObject
 
 struct GroupRemoveChild : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
         osg::Node* child = dynamic_cast<osg::Node*>(inputParameters[0].get());
         if (!child) return false;
 
-        osg::Group* group = reinterpret_cast<osg::Group*>(objectPtr);
+        osg::Group* group = dynamic_cast<osg::Group*>(objectPtr);
         group->removeChild(child);
 
         return true;

@@ -1911,9 +1911,9 @@ protected:
     { \
         struct MethodCaller : public osgDB::MethodObject \
         { \
-            virtual bool run(void* objectPtr, osg::Parameters&, osg::Parameters&) const \
+            virtual bool run(osg::Object* objectPtr, osg::Parameters&, osg::Parameters&) const \
             { \
-                MyClass* obj = reinterpret_cast<MyClass*>(objectPtr); \
+                MyClass* obj = dynamic_cast<MyClass*>(objectPtr); \
                 obj->METHODNAME(); \
                 return true; \
             } \

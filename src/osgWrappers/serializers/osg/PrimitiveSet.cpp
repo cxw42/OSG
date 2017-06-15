@@ -117,7 +117,7 @@ namespace DrawElementsWrapper {
 
 struct ResizeDrawElements : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
@@ -131,7 +131,7 @@ struct ResizeDrawElements : public osgDB::MethodObject
             osg::UIntValueObject* uivo = dynamic_cast<osg::UIntValueObject*>(indexObject);
             if (uivo) index = uivo->getValue();
         }
-        osg::DrawElements* de = reinterpret_cast<osg::DrawElements*>(objectPtr);
+        osg::DrawElements* de = dynamic_cast<osg::DrawElements*>(objectPtr);
         de->resizeElements(index);
 
         return true;

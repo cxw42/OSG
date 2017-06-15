@@ -6,7 +6,7 @@
 
 struct TabWidgetCurrentIndexChangedImplementation : public osgDB::MethodObject
 {
-    virtual bool run(void* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
+    virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const
     {
         if (inputParameters.empty()) return false;
 
@@ -20,7 +20,7 @@ struct TabWidgetCurrentIndexChangedImplementation : public osgDB::MethodObject
             osg::UIntValueObject* uivo = dynamic_cast<osg::UIntValueObject*>(indexObject);
             if (uivo) index = uivo->getValue();
         }
-        osgUI::TabWidget* cb = reinterpret_cast<osgUI::TabWidget*>(objectPtr);
+        osgUI::TabWidget* cb = dynamic_cast<osgUI::TabWidget*>(objectPtr);
         cb->currentIndexChangedImplementation(index);
 
         return true;

@@ -19,7 +19,7 @@
 #include <osgDB/FileUtils>
 
 #ifdef WIN32
-#if !defined(__MINGW32__)
+#if !defined(__MINGW32__) && !defined(_WIN32_WINNT)
     #define _WIN32_WINNT 0x0500
 #endif
     #include <windows.h>
