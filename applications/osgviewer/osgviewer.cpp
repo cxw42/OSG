@@ -10,6 +10,7 @@
 */
 
 #include <osgDB/ReadFile>
+#include <osgDB/WriteFile>
 #include <osgUtil/Optimizer>
 #include <osg/CoordinateSystemNode>
 
@@ -48,6 +49,8 @@ int main(int argc, char** argv)
     arguments.getApplicationUsage()->addCommandLineOption("-p <filename>","Play specified camera path animation file, previously saved with 'z' key.");
     arguments.getApplicationUsage()->addCommandLineOption("--speed <factor>","Speed factor for animation playing (1 == normal speed).");
     arguments.getApplicationUsage()->addCommandLineOption("--device <device-name>","add named device to the viewer");
+    arguments.getApplicationUsage()->addCommandLineOption("--write <model-filename>","Save the optimized geometry to the specified filename");
+    arguments.getApplicationUsage()->addCommandLineOption("--no-window","If specified, do not open a window.  Can be used with --write.");
 
     osgViewer::Viewer viewer(arguments);
 
@@ -151,6 +154,11 @@ int main(int argc, char** argv)
     // add the screen capture handler
     viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
 
+    // If the user specified --write, save the filename to use later.
+    // For multiple --write options, only the last will be used.
+    std::string model_filename("");
+    while(arguments.read("--write", model_filename)) {}
+
     // load the data
     osg::ref_ptr<osg::Node> loadedModel = osgDB::readRefNodeFiles(arguments);
     if (!loadedModel)
@@ -169,15 +177,24 @@ int main(int argc, char** argv)
         return 1;
     }
 
-
     // optimize the scene graph, remove redundant nodes and state etc.
     osgUtil::Optimizer optimizer;
     optimizer.optimize(loadedModel);
 
     viewer.setSceneData(loadedModel);
 
-    viewer.realize();
+    // Save the model if the user requested it
+    if(!model_filename.empty()) {
+        osgDB::writeObjectFile(*loadedModel, model_filename);
+    }
 
-    return viewer.run();
+    // Run the viewer unless the user requested not to do so
+    if(arguments.read("--no-window")) {
+        return 0;
+    } else {
+        viewer.realize();
+        return viewer.run();
+    }
+
 
 }

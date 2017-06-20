@@ -57,15 +57,14 @@ protected:
     // Return true if the manipulator is std::endl
     bool isEndl( std::ostream& (*fn)(std::ostream&) )
     {
-#ifdef __sun
-        // What a mess, but solaris does not like taking the address below
+        // Per http://forum.openscenegraph.org/viewtopic.php?t=14688 ,
+        // use this hack rather than directly testing whether fn has the
+        // same address as std::endl.
+        // What a mess, but solaris does not like taking the address.
         std::stringstream ss;
         ss << fn;
         std::string s = ss.str();
-        return !s.empty() && s[0] == '\n';
-#else
-        return fn==static_cast<std::ostream& (*)(std::ostream&)>(std::endl);
-#endif
+        return !s.empty() && (s[0] == '\n' || s[0] == '\r');
     }
 
     std::ostream* _out;
