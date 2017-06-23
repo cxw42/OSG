@@ -53,7 +53,6 @@ class Script : public osg::Object
         unsigned int _modifiedCount;
 };
 
-
 /** NodeCallback for attaching a script to a NodeCallback so that it can be called as an update or event callback.*/
 class OSG_EXPORT ScriptNodeCallback : public osg::NodeCallback
 {
@@ -95,25 +94,131 @@ class OSG_EXPORT ScriptNodeCallback : public osg::NodeCallback
         std::string             _entryPoint;
 };
 
+/// Class used by a ScriptEngine to report errors when executing a Script.
+/// Fields are only filled in to the extent a particular ScriptEngine
+/// supports those fields.
+/// \note   This is an osg::Object so that the ScriptEngine doesn't have
+///         to track its lifetime.
+class ScriptError: public osg::Object
+{
+public:
+
+    ScriptError(const std::string& errorMessage = std::string(),
+                const int lineNumber = -1,
+                const std::string& fileName = std::string(),
+                const std::string& tracebackMessage = std::string())
+        : _errorMessage(errorMessage), _tracebackMessage(tracebackMessage)
+        , _fileName(fileName), _lineNumber(lineNumber) {}
+
+    ScriptError(const ScriptError& rhs, const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
+        : osg::Object(rhs,copyop)
+        , _errorMessage(rhs._errorMessage)
+        , _tracebackMessage(rhs._tracebackMessage)
+        , _fileName(rhs._fileName)
+        , _lineNumber(rhs._lineNumber)
+        {}
+
+    META_Object(osg, ScriptError);
+
+    /// Get the error message (if any).
+    const std::string& getErrorMessage() { return _errorMessage; }
+
+    /// Get the error message (if any).
+    const std::string& getErrorMessage() const { return _errorMessage; }
+
+    /// Set the error message
+    void setErrorMessage(const std::string& errorMessage) { _errorMessage = errorMessage; }
+
+    /// Get the traceback message (if any).
+    const std::string& getTracebackMessage() { return _tracebackMessage; }
+
+    /// Get the traceback message (if any).
+    const std::string& getTracebackMessage() const { return _tracebackMessage; }
+
+    /// Set the traceback message
+    void setTracebackMessage(const std::string& tracebackMessage) { _tracebackMessage = tracebackMessage; }
+
+    /// Get the filename (if any).
+    const std::string& getFileName() { return _fileName; }
+
+    /// Get the filename (if any).
+    const std::string& getFileName() const { return _fileName; }
+
+    /// Set the filename
+    void setFileName(const std::string& fileName) { _fileName = fileName; }
+
+    /// Get the traceback message (if any).
+    int getLineNumber() { return _lineNumber; }
+
+    /// Get the traceback message (if any).
+    int getLineNumber() const { return _lineNumber; }
+
+    /// Set the traceback message
+    void setLineNumber(const int lineNumber) { _lineNumber = lineNumber; }
+
+protected:
+    virtual ~ScriptError() {}
+
+    /// The error message, if the ScriptEngine provides one
+    std::string _errorMessage;
+
+    /// A traceback message, if the ScriptEngine provides one
+    std::string _tracebackMessage;
+
+    /// The name of the file in which the error occurred, if the ScriptEngine
+    /// provides that information
+    std::string _fileName;
+
+    /// The line number where the error occurred, if the ScriptEngine
+    /// provides that information
+    int _lineNumber;
+};
+
 /** ScriptEngine base class for integrating different scripting languages.
  *  Concrete ScriptEngine's are provided by osgDB::readFile<ScriptEngine> */
 class ScriptEngine : public osg::Object
 {
     public:
 
-        /** get the scripting language supported by the ScriptEngine.*/
+        /// Get the scripting language supported by the ScriptEngine.
         inline const std::string& getLanguage() const { return _language; }
 
-        /** run a Script.*/
+        /// run a Script without input or output parameters.
+        /// Clears #_lastSavedError.
+        /// \return true on success, or false on error
         bool run(osg::Script* script)
         {
+            _lastSavedError = 0;
             // assumpt empty input and output parameters lists
             Parameters inputParameters, outputParameters;
             return run(script, "", inputParameters, outputParameters);
         }
 
-        /** run a Script.*/
+        /// Run a Script.  The relationship between \p script and
+        /// \p entryPoint may be different for different ScriptEngines.
+        ///
+        /// \param script       The script to run, or NULL
+        /// \param entryPoint   If the script defines multiple functions,
+        ///                     which one to run.
+        /// \param inputParameters  Input parameters of the given script
+        ///                         or entryPoint.
+        /// \param outputParameters Filled in with outputs of the given script
+        ///                         or entryPoint.
+        ///
+        /// \return true on success, or false on error
+        ///
+        /// \note Authors of concrete ScriptEngines SHOULD clear
+        /// #_lastSavedError before executing the script, for consistency with
+        /// run(osg::Script*).
         virtual bool run(osg::Script* script, const std::string& entryPoint, Parameters& inputParameters, Parameters& outputParameters) = 0;
+
+        /// Get the last error saved by the ScriptEngine, if supported.
+        /// The error may be an error in the last script run, but that is
+        /// up to the ScriptEngine.
+        /// \return The last error, if any.  If the ScriptEngine does not
+        /// support returning error information, the return value will be
+        /// a NULL ref_ptr.
+        const osg::ref_ptr<ScriptError>& getLastSavedError() { return _lastSavedError; }
 
     protected:
 
@@ -121,6 +226,9 @@ class ScriptEngine : public osg::Object
         virtual ~ScriptEngine() {}
 
         std::string _language;
+
+        /// The last error saved by the ScriptEngine, if any.
+        osg::ref_ptr<ScriptError> _lastSavedError;
 };
 
 }
