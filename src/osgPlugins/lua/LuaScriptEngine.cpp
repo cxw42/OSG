@@ -19,9 +19,6 @@
 
 using namespace lua;
 
-
-
-
 class LuaCallbackObject : public osg::CallbackObject
 {
 public:
@@ -69,7 +66,6 @@ protected:
     osg::ref_ptr<const LuaScriptEngine> _lse;
     int _ref;
 };
-
 
 static int getProperty(lua_State * _lua)
 {
@@ -2067,6 +2063,8 @@ bool LuaScriptEngine::loadScript(osg::Script* script)
 
 bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, osg::Parameters& inputParameters, osg::Parameters& outputParameters)
 {
+    this->_lastSavedError = 0;
+
     if (!script || !_lua) return false;
 
 
@@ -2078,7 +2076,7 @@ bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, os
         {
             if (lua_pcall(_lua, 0, 0, 0)!=0)
             {
-                OSG_NOTICE<< "error initialize script "<< lua_tostring(_lua, -1)<<std::endl;
+                OSG_NOTICE<< "error initializing script "<< lua_tostring(_lua, -1)<<std::endl;
                 return false;
             }
         }
@@ -2097,7 +2095,7 @@ bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, os
     }
     else
     {
-        lua_getglobal(_lua, entryPoint.c_str()); /* function to be called */
+        lua_getglobal(_lua, entryPoint.c_str());    //function to be called
     }
 
     for(osg::Parameters::const_iterator itr = inputParameters.begin();
@@ -2110,7 +2108,12 @@ bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, os
 
     if (lua_pcall(_lua, inputParameters.size(), LUA_MULTRET,0)!=0)
     {
-        OSG_NOTICE<<"Lua error : "<<lua_tostring(_lua, -1)<<std::endl;
+        const std::string& errorMessage(lua_tostring(_lua, -1));
+        OSG_NOTICE << "Lua error : " << errorMessage << std::endl;
+
+        this->_lastSavedError = new osg::ScriptError(errorMessage);
+        this->_lastSavedError->setTracebackMessage(getLuaTraceback());
+
         return false;
     }
 
@@ -2126,6 +2129,14 @@ bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, os
     }
 
     return true;
+}
+
+// Get the Lua traceback.
+const std::string LuaScriptEngine::getLuaTraceback()
+{
+    std::string retval;
+
+    return retval;
 }
 
 
