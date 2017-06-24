@@ -417,10 +417,17 @@ class LuaScriptEngine : public osg::ScriptEngine
 
     protected:
 
+        /// Create the Lua state
         void initialize();
+
+        /// Get the Lua traceback.  TODO update this to also return file/line,
+        /// if available.
+        const std::string getLuaTraceback();
 
         virtual ~LuaScriptEngine();
 
+        /// The Lua state to be used for all scripts run by this ScriptEngine
+        /// instances.  Different ScriptEngine instances do not share state.
         lua_State* _lua;
 
         unsigned int _scriptCount;
