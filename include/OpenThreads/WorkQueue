@@ -45,14 +45,6 @@ public:
 
     WorkQueue() {}
 
-    /// Remove and return an item, waiting if no item is available yet.
-    T get()
-    {
-        T retval;
-        get(retval);
-        return retval;
-    }
-
     /// Remove an item and fill in the parameter, waiting if no item is
     /// available yet.
     /// \param[out] item    The item retrieved from the queue
@@ -64,6 +56,31 @@ public:
         }
         item = _queue.front();
         _queue.pop();
+    }
+
+    /// Remove and return an item, waiting if no item is available yet.
+    /// This is a convenience wrapper around get(T&).
+    T get()
+    {
+        T retval;
+        get(retval);
+        return retval;
+    }
+
+    /// Remove and return an item, but only if one is available.
+    /// \param[out] item    The item to return.  Unchanged if no item
+    ///                     is available.
+    /// \return True if an item was available; false otherwise.
+    bool getIfAvailable(T& item)
+    {
+        ScopedLock<Mutex> lock(_mutex);
+        if(_queue.empty()) {
+            return false;       // no item available
+        }
+
+        item = _queue.front();
+        _queue.pop();
+        return true;
     }
 
     /// Add an item to the queue.
