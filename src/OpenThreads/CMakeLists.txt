@@ -69,6 +69,7 @@ SET(OpenThreads_PUBLIC_HEADERS
     ${HEADER_PATH}/ReentrantMutex
     ${HEADER_PATH}/ScopedLock
     ${HEADER_PATH}/Thread
+    ${HEADER_PATH}/WorkQueue
     ${OPENTHREADS_VERSION_HEADER}
     ${OPENTHREADS_CONFIG_HEADER}
 )
