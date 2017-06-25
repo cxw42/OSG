@@ -1,0 +1,127 @@
+/* -*-c++-*- OpenThreads library, Copyright (C) 2017 Chris White
+ *
+ * This library is open source and may be redistributed and/or modified under
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OpenSceneGraph Public License for more details.
+ *
+ * See end of file for further license information
+*/
+
+//
+// WorkQueue - C++ class for a general producer-to-consumer work queue.
+// ~~~~~~~~~
+//
+
+#ifndef _OPENTHREADS_WORKQUEUE_
+#define _OPENTHREADS_WORKQUEUE_
+
+#include <OpenThreads/Mutex>
+#include <OpenThreads/ScopedLock>
+#include <OpenThreads/Condition>
+
+#include <queue>
+
+namespace OpenThreads {
+
+/// @class WorkQueue<T>
+/// @brief A work queue that carries items of type T between threads.
+/// When a producer thread adds an item to a WorkQueue, exactly one
+/// consumer thread will retrieve that item.
+///
+/// Type T must meet the requirements of std::queue<T>.  If construction or
+/// copying of a T instance throws, that instance may be lost.
+///
+/// Modified from https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/
+template <typename T>
+class WorkQueue
+{
+public:
+
+    WorkQueue() {}
+
+    /// Remove and return an item, waiting if no item is available yet.
+    T get()
+    {
+        T retval;
+        get(retval);
+        return retval;
+    }
+
+    /// Remove an item and fill in the parameter, waiting if no item is
+    /// available yet.
+    /// \param[out] item    The item retrieved from the queue
+    void get(T& item)
+    {
+        ScopedLock<Mutex> lock(_mutex);
+        while (_queue.empty()) {
+            _cond.wait(&_mutex);
+        }
+        item = _queue.front();
+        _queue.pop();
+    }
+
+    /// Add an item to the queue.
+    /// \param[in]  item    The item to be copied into the queue.
+    void put(const T& item)
+    {
+        {
+            ScopedLock<Mutex> lock(_mutex);
+            _queue.push(item);
+        }
+        _cond.signal();
+    }
+
+private:
+
+    /// Private copy constructor, to disable copying
+    WorkQueue(const WorkQueue&) {}
+
+    /// Private assignment operator, to disable assignment
+    WorkQueue& operator=(const WorkQueue&) { return *this; }
+
+    /// The actual queue of items.
+    std::queue<T> _queue;
+
+    Mutex _mutex;
+    Condition _cond;
+};
+
+}
+
+/*
+ * Based on Queue.h by Juan Palacios,
+ * described at https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/
+ * and found at
+ * https://github.com/juanchopanza/cppblog/blob/master/Concurrency/Queue/Queue.h
+ * Queue.h is:
+ * Copyright (c) 2013, Juan Palacios <juan.palacios.puyana@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#endif // !_OPENTHREADS_THREAD_
