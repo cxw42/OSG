@@ -2055,7 +2055,7 @@ bool LuaScriptEngine::loadScript(osg::Script* script)
     }
     else
     {
-        OSG_NOTICE << "LuaScriptEngine::luaL_loadstring(Script*) error: " << lua_tostring(_lua, -1) << std::endl;
+        OSG_NOTICE << "LuaScriptEngine::loadScript(Script*) error: " << lua_tostring(_lua, -1) << std::endl;
         return false;
     }
 }
@@ -2134,8 +2134,7 @@ bool LuaScriptEngine::run(osg::Script* script, const std::string& entryPoint, os
 // Get the Lua traceback.
 const std::string LuaScriptEngine::getLuaTraceback()
 {
-    std::string retval;
-
+    std::string retval("Traceback not availale");       // TODO fill this in
     return retval;
 }
 
