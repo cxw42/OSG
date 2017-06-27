@@ -32,8 +32,8 @@
 
 using namespace osgViewer;
 
-//#define DEBUG_MESSAGE OSG_NOTICE
-#define DEBUG_MESSAGE OSG_DEBUG
+#define DEBUG_MESSAGE OSG_DEBUG_FP
+    // since there is a lot of per-frame output, use the lowest notify level
 
 OpenGLQuerySupport::OpenGLQuerySupport():
     _extensions(0)
