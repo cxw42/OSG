@@ -3409,15 +3409,30 @@ bool LuaScriptEngine::getfields(int pos, const char* f1, const char* f2, const c
     return true;
 }
 
-/// Get the specified number of elements from the table at position pos and
-/// leave the elements on the stack, as long as they are of the given type.
+/// Get the #numElements elements from the table at stakc position #pos and
+/// leave the elements on the stack, as long as they are of the given Lua #type.
 bool LuaScriptEngine::getelements(int pos, int numElements, int type) const
 {
     int abs_pos = getAbsolutePos(pos);
+
+    // Determine the first index of the table.
+    // If the table has an element [0], it is 0-based.  If not, it is
+    // 1-based (a native Lua table, e.g., `{1,2,3,4}`).
+
+    int offset = 1;     // Assume 1-based unless we find [0] exists
+
+    lua_pushinteger(_lua, 0);
+    lua_gettable(_lua, abs_pos);
+    if(!lua_isnil(_lua, -1))    // 0-based
+    {
+        offset = 0;
+    }
+    lua_pop(_lua, 1);
+
+    // Get the elements and check their types
     for(int i=0; i<numElements; ++i)
     {
-        lua_pushinteger(_lua, i+1);
-            // +1 because Lua tables with numeric indices are 1-based
+        lua_pushinteger(_lua, i+offset);
         lua_gettable(_lua, abs_pos);
         if (lua_type(_lua, -1)!=type) { lua_pop(_lua, i+1); return false; }
     }
