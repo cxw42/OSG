@@ -3767,6 +3767,9 @@ bool LuaScriptEngine::popParameter(osg::Object* object) const
     return false;
 }
 
+/// Pop the value off the top of the stack.  If that value can be stored in
+/// a concrete osg::ValueObject, do so, and return that object.  Otherwise,
+/// the popped value is lost.
 osg::Object* LuaScriptEngine::popParameterObject() const
 {
     osg::ref_ptr<osg::Object> object = 0;
