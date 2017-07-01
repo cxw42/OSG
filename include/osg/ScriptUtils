@@ -1,0 +1,57 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield
+ * This file Copyright (C) 2017 Chris White
+ *
+ * This library is open source and may be redistributed and/or modified under
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OpenSceneGraph Public License for more details.
+*/
+
+/// This is a class that provides access to C routines for matrix manipulation
+/// and other useful functions.  It is not expected to be serialized.
+
+#ifndef OSG_SCRIPTUTILS
+#define OSG_SCRIPTUTILS 1
+
+#include <osg/Object>
+
+#include <string>
+#include <vector>
+
+namespace osg {
+
+/// A holder class for methods.  The real magic happens in
+/// src/osgWrappers/serializers/osg/ScriptHelper.cpp, which defines methods
+/// of ScriptHelper that are accessible via a concrete ScriptEngine.
+class OSG_EXPORT ScriptHelper : public Object
+{
+    public:
+
+        ScriptHelper() {}
+
+        inline explicit ScriptHelper(bool threadSafeRefUnref)
+            : Object(threadSafeRefUnref) {}
+
+        /// Do-nothing copy constructor, to permit the serializers to work
+        ScriptHelper(const ScriptHelper&,
+                    const CopyOp& copyop=CopyOp::SHALLOW_COPY) {}
+
+        META_Object(osg, ScriptHelper);
+
+    protected:
+        /// Protected destructor - must use ref_ptr
+        virtual ~ScriptHelper() {}
+
+    private:
+        /// disallow copy assignment by callers
+        ScriptHelper& operator = (const ScriptHelper&) { return *this; }
+};
+
+}
+
+#endif
