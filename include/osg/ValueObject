@@ -259,8 +259,15 @@ META_ValueObject(Vec3d, Vec3dValueObject)
 META_ValueObject(Vec4d, Vec4dValueObject)
 META_ValueObject(Quat, QuatValueObject)
 META_ValueObject(Plane, PlaneValueObject)
+
 META_ValueObject(Matrixf, MatrixfValueObject)
 META_ValueObject(Matrixd, MatrixdValueObject)
+#ifdef OSG_USE_FLOAT_MATRIX
+typedef MatrixfValueObject MatrixValueObject;
+#else
+typedef MatrixdValueObject MatrixValueObject;
+#endif
+
 META_ValueObject(BoundingBoxf, BoundingBoxfValueObject)
 META_ValueObject(BoundingBoxd, BoundingBoxdValueObject)
 META_ValueObject(BoundingSpheref, BoundingSpherefValueObject)
