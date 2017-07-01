@@ -148,6 +148,7 @@ SET(TARGET_H
     ${HEADER_PATH}/Scissor
     ${HEADER_PATH}/ScissorIndexed
     ${HEADER_PATH}/ScriptEngine
+    ${HEADER_PATH}/ScriptUtils
     ${HEADER_PATH}/Sequence
     ${HEADER_PATH}/ShadeModel
     ${HEADER_PATH}/Shader
