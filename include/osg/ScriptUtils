@@ -26,30 +26,33 @@
 namespace osg {
 
 /// A holder class for methods.  The real magic happens in
-/// src/osgWrappers/serializers/osg/ScriptHelper.cpp, which defines methods
-/// of ScriptHelper that are accessible via a concrete ScriptEngine.
-class OSG_EXPORT ScriptHelper : public Object
+/// src/osgWrappers/serializers/osg/ScriptUtils.cpp, which defines methods
+/// of ScriptUtils that are accessible via a concrete ScriptEngine.
+class OSG_EXPORT ScriptUtils : public Object
 {
     public:
 
-        ScriptHelper() {}
+        /// Do-nothing constructor in ScriptUtils.cpp to give this
+        /// class an object file to live in.
+        ScriptUtils();
 
-        inline explicit ScriptHelper(bool threadSafeRefUnref)
+        inline explicit ScriptUtils(bool threadSafeRefUnref)
             : Object(threadSafeRefUnref) {}
 
         /// Do-nothing copy constructor, to permit the serializers to work
-        ScriptHelper(const ScriptHelper&,
-                    const CopyOp& copyop=CopyOp::SHALLOW_COPY) {}
+        ScriptUtils(const ScriptUtils& scriptutils,
+                    const CopyOp& copyop=CopyOp::SHALLOW_COPY)
+            : Object(scriptutils, copyop) {}
 
-        META_Object(osg, ScriptHelper);
+        META_Object(osg, ScriptUtils);
 
     protected:
         /// Protected destructor - must use ref_ptr
-        virtual ~ScriptHelper() {}
+        virtual ~ScriptUtils() {}
 
     private:
         /// disallow copy assignment by callers
-        ScriptHelper& operator = (const ScriptHelper&) { return *this; }
+        ScriptUtils& operator = (const ScriptUtils&) { return *this; }
 };
 
 }
