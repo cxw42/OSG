@@ -353,6 +353,7 @@ SET(TARGET_SRC
     Scissor.cpp
     ScissorIndexed.cpp
     ScriptEngine.cpp
+    ScriptUtils.cpp
     Sequence.cpp
     ShadeModel.cpp
     Shader.cpp
