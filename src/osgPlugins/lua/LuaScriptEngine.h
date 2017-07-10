@@ -348,6 +348,11 @@ class LuaScriptEngine : public osg::ScriptEngine
         void pushObject(osg::Object* object) const;
         void pushAndCastObject(const std::string& compoundClassName, osg::Object* object) const;
 
+        /// Retrieve a T* from the table at the top of the Lua stack, but
+        /// do not pop that table from the stack.  T* must be accessible
+        /// from osg::Object* via dynamic_cast.  Returns 0 if the table
+        /// does not represent an osg::Object, or if that object is not
+        /// dynamic_castable to T.
         template<class T>
         T* getObjectFromTable(int pos) const
         {

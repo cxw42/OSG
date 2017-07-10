@@ -79,6 +79,9 @@ static int getProperty(lua_State * _lua)
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
 
+            if(!object)
+                return luaL_error(_lua, "getProperty: could not get osg::Object to look up property %s", propertyName.c_str());
+
             return lse->pushPropertyToStack(object, propertyName);
         }
     }
@@ -99,6 +102,9 @@ static int setProperty(lua_State* _lua)
         {
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
+
+            if(!object)
+                return luaL_error(_lua, "setProperty: could not get osg::Object to set property %s", propertyName.c_str());
 
             return lse->setPropertyFromStack(object, propertyName);
         }
@@ -124,6 +130,9 @@ static int getContainerProperty(lua_State * _lua)
         {
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
+            if(!object)
+                return luaL_error(_lua, "Parameter 1 (self) does not represent an osg::Object");
+
             std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
 
             return lse->pushPropertyToStack(object, propertyName);
@@ -171,6 +180,9 @@ static int setContainerProperty(lua_State* _lua)
         {
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
+            if(!object)
+                return luaL_error(_lua, "Parameter 1 (self) does not represent an osg::Object");
+
             std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
 
             return lse->setPropertyFromStack(object, propertyName);
@@ -341,6 +353,8 @@ static int getMapProperty(lua_State * _lua)
         {
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
+            if(!object)
+                return luaL_error(_lua, "Parameter 1 (self) does not represent an osg::Object");
             std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
 
             return lse->pushPropertyToStack(object, propertyName);
@@ -397,8 +411,10 @@ static int setMapProperty(lua_State* _lua)
         {
             std::string propertyName = lua_tostring(_lua, 2);
             osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
-            std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
+            if(!object)
+                return luaL_error(_lua, "Parameter 1 (self) does not represent an osg::Object");
 
+            std::string containerPropertyName = lse->getStringFromTable(1,"containerPropertyName");
             return lse->setPropertyFromStack(object, propertyName);
         }
         else
@@ -1033,6 +1049,11 @@ static int callStateSetRemove(lua_State* _lua)
         {
             osg::Object* po  = lse->getObjectFromTable<osg::Object>(3);
             osg::StateAttribute* sa = dynamic_cast<osg::StateAttribute*>(po);
+            if(!sa)
+            {
+                OSG_NOTICE << "Warning: StateSet:remove() requires a texture attribute as the last parameter" << std::endl;
+                return 0;
+            }
             stateset->removeTextureAttribute(static_cast<unsigned int>(index), sa);
             return 0;
         }
@@ -1689,6 +1710,9 @@ static int callClassMethod(lua_State* _lua)
     if (n>=1 && lua_type(_lua, 1)==LUA_TTABLE)
     {
         osg::Object* object  = lse->getObjectFromTable<osg::Object>(1);
+        if(!object)
+            return luaL_error(_lua, "Parameter 1 (self) does not represent an osg::Object.  Did you call obj.%s() rather than obj:%s()?", methodName.c_str(), methodName.c_str());
+
         const std::string compoundClassName = lse->getObjectCompoundClassName(1); // object->getCompoundClassName();
         // OSG_NOTICE<<"callClassMethod() on "<<object->className()<<" method name "<<methodName<<", stored compoundClassName "<<compoundClassName<<std::endl;
 
@@ -1850,6 +1874,14 @@ static int writeFile(lua_State * _lua)
             osgDB::writeObjectFile(*object, filename);
             return 1;
         }
+        else
+        {
+            OSG_NOTICE << "writeFile: no osg::Object provided" << std::endl;
+        }
+    }
+    else
+    {
+        OSG_NOTICE << "writeFile must be called as writeFile(object, filename)" << std::endl;
     }
     return 0;
 }
@@ -4101,6 +4133,8 @@ void LuaScriptEngine::pushObject(osg::Object* object) const
     }
 }
 
+/// Push a Lua table representing #object, or nil if #object is NULL or is
+/// not of the given #compoundClassName.
 void LuaScriptEngine::pushAndCastObject(const std::string& compoundClassName, osg::Object* object) const
 {
     if (object && _ci.isObjectOfType(object, compoundClassName))
