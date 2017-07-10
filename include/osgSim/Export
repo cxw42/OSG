@@ -30,9 +30,17 @@
     #  if defined( OSG_LIBRARY_STATIC )
     #    define OSGSIM_EXPORT
     #  elif defined( OSGSIM_LIBRARY )
-    #    define OSGSIM_EXPORT   __declspec(dllexport)
+    #    if defined( __clang__ )
+    #      define OSGSIM_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGSIM_EXPORT   __declspec(dllexport)
+    #    endif
     #  else
-    #    define OSGSIM_EXPORT   __declspec(dllimport)
+    #    if defined( __clang__ )
+    #      define OSGSIM_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGSIM_EXPORT   __declspec(dllimport)
+    #    endif
     #  endif
 #else
     #  define OSGSIM_EXPORT

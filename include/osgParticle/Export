@@ -32,9 +32,17 @@
     #  if defined( OSG_LIBRARY_STATIC )
     #    define OSGPARTICLE_EXPORT
     #  elif defined( OSGPARTICLE_LIBRARY )
-    #    define OSGPARTICLE_EXPORT   __declspec(dllexport)
+    #    if defined( __clang__ )
+    #      define OSGPARTICLE_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGPARTICLE_EXPORT   __declspec(dllexport)
+    #    endif
     #  else
-    #    define OSGPARTICLE_EXPORT   __declspec(dllimport)
+    #    if defined( __clang__ )
+    #      define OSGPARTICLE_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGPARTICLE_EXPORT   __declspec(dllimport)
+    #    endif
     #  endif
 #else
     #  define OSGPARTICLE_EXPORT

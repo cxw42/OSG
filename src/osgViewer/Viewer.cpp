@@ -871,6 +871,7 @@ void Viewer::reprojectPointerData(osgGA::GUIEventAdapter& source_event, osgGA::G
     }
 }
 
+/// Retrieve and dispatch events.  Called once per frame.
 void Viewer::eventTraversal()
 {
     if (_done) return;
@@ -915,7 +916,8 @@ void Viewer::eventTraversal()
         osgViewer::GraphicsWindow* gw = dynamic_cast<osgViewer::GraphicsWindow*>(*citr);
         if (gw)
         {
-            gw->checkEvents();
+            gw->checkEvents();  // <--- this is where the OS's message queue
+                                //      is pumped/processed.
 
             osgGA::EventQueue::Events gw_events;
             gw->getEventQueue()->takeEvents(gw_events, cutOffTime);

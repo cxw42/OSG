@@ -30,9 +30,17 @@
     #  if defined( OSG_LIBRARY_STATIC )
     #    define OSGPRESENTATION_EXPORT
     #  elif defined( OSGPRESENTATION_LIBRARY )
-    #    define OSGPRESENTATION_EXPORT   __declspec(dllexport)
+    #    if defined( __clang__ )
+    #      define OSGPRESENTATION_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGPRESENTATION_EXPORT   __declspec(dllexport)
+    #    endif
     #  else
-    #    define OSGPRESENTATION_EXPORT   __declspec(dllimport)
+    #    if defined( __clang__ )
+    #      define OSGPRESENTATION_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGPRESENTATION_EXPORT   __declspec(dllimport)
+    #    endif
     #  endif
 #else
     #  define OSGPRESENTATION_EXPORT

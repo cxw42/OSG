@@ -31,9 +31,21 @@
     #  if defined( OSG_LIBRARY_STATIC )
     #    define OSG_EXPORT
     #  elif defined( OSG_LIBRARY )
-    #    define OSG_EXPORT   __declspec(dllexport)
+         // building OSG itself
+    #    if defined( __clang__ )
+    #      define OSG_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSG_EXPORT   __declspec(dllexport)
+    #    endif
     #  else
-    #    define OSG_EXPORT   __declspec(dllimport)
+         // building consumers of OSG
+    #    if defined( __clang__ )
+           // on clang, definitions and uses both need to have public
+           // visibility.
+    #      define OSG_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSG_EXPORT   __declspec(dllimport)
+    #    endif
     #  endif
 #else
     #  define OSG_EXPORT

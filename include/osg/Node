@@ -70,6 +70,18 @@ typedef std::vector< Matrix > MatrixList;
 */
 class OSG_EXPORT Node : public Object
 {
+    protected:
+
+        /// Node destructor.  Protected so that Nodes cannot
+        /// be deleted other than by being dereferenced and the reference
+        /// count being zero (see osg::Referenced), preventing the deletion
+        /// of nodes which are still in use. This also means that
+        /// Nodes cannot be created on stack, i.e., `Node node;` will not
+        /// compile.  All nodes must be created on the heap, i.e.,
+        /// `Node* node = new Node()`.
+        /// \note Listed first to control where typeinfo is emitted.
+        virtual ~Node();
+
     public:
 
         /** Construct a node.
@@ -479,17 +491,6 @@ class OSG_EXPORT Node : public Object
 
 
     protected:
-
-        /** Node destructor. Note, is protected so that Nodes cannot
-            be deleted other than by being dereferenced and the reference
-            count being zero (see osg::Referenced), preventing the deletion
-            of nodes which are still in use. This also means that
-            Nodes cannot be created on stack i.e Node node will not compile,
-            forcing all nodes to be created on the heap i.e Node* node
-            = new Node().*/
-        virtual ~Node();
-
-
 
         BoundingSphere                          _initialBound;
         ref_ptr<ComputeBoundingSphereCallback>  _computeBoundCallback;

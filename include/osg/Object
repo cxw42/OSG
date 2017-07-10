@@ -59,8 +59,22 @@ class CallbackObject;
 */
 class OSG_EXPORT Object : public Referenced
 {
-    public:
+    protected:
 
+        /// Object destructor.  Protected so that Objects cannot
+        /// be deleted other than by being dereferenced and the reference
+        /// count being zero (see osg::Referenced), preventing the deletion
+        /// of objects which are still in use. This also means that
+        /// Objects cannot be created on stack, i.e., `Object object;` will
+        /// not compile.  All objects must be created on the heap, i.e.,
+        /// `Object* obj = new Object()`.
+        /// There are some classes that are different, e.g.,
+        /// osgViewer::Viewer.  Those classes redeclare their destructors
+        /// public.
+        /// \note Listed first to control where typeinfo is emitted.
+        virtual ~Object();
+
+    public:
 
         /** Construct an object. Note Object is a pure virtual base class
             and therefore cannot be constructed on its own, only derived
@@ -195,25 +209,31 @@ class OSG_EXPORT Object : public Referenced
         /** Get the name of object.*/
         inline const std::string& getName() const { return _name; }
 
-
+        /// Whether the object is expected to change over its lifetime.
+        /// The DataVariance value of an object can be used by routines
+        /// such as optimization codes that wish to share static data.
         enum DataVariance
         {
+            /// Values that vary over the lifetime of the object.  Use this
+            /// on any osg::Drawable or osg::StateSet instances that are
+            /// modified, e.g., by event or update callbacks, to prevent
+            /// crashes when running multithreaded.
             DYNAMIC,
+
+            /// Values that do not change over the lifetime of the object.
             STATIC,
+
+            /// Indicates that the DataVariance has not yet been set.
             UNSPECIFIED
         };
 
-        /** Set the data variance of this object.
-           * Can be set to either STATIC for values that do not change over the lifetime of the object,
-           * or DYNAMIC for values that vary over the lifetime of the object. The DataVariance value
-           * can be used by routines such as optimization codes that wish to share static data.
-           * UNSPECIFIED is used to specify that the DataVariance hasn't been set yet. */
+        /// Set the data variance of this object
         inline void setDataVariance(DataVariance dv) { _dataVariance = dv; }
 
-        /** Get the data variance of this object.*/
+        /// Get the data variance of this object.
         inline DataVariance getDataVariance() const { return _dataVariance; }
 
-        /** Compute the DataVariance based on an assessment of callback etc.*/
+        /// Compute the DataVariance based on an assessment of callback etc.
         virtual void computeDataVariance() {}
 
 
@@ -271,18 +291,7 @@ class OSG_EXPORT Object : public Referenced
            * for all graphics contexts. */
         virtual void releaseGLObjects(osg::State* = 0) const {}
 
-
     protected:
-
-        /** Object destructor. Note, is protected so that Objects cannot
-            be deleted other than by being dereferenced and the reference
-            count being zero (see osg::Referenced), preventing the deletion
-            of nodes which are still in use. This also means that
-            Nodes cannot be created on stack i.e Node node will not compile,
-            forcing all nodes to be created on the heap i.e Node* node
-            = new Node().*/
-        virtual ~Object();
-
         std::string _name;
         DataVariance _dataVariance;
 

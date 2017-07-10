@@ -271,6 +271,13 @@ class GraphicsWindowEmbedded : public GraphicsWindow
         virtual void grabFocus() {}
         virtual void grabFocusIfPointerInWindow() {}
         virtual void raiseWindow() {}
+
+        // GraphicsWindowEmbedded inherits GraphicsWindow::checkEvents(),
+        // which just reports the state of the GraphicsWindow's event queue.
+        // Therefore, GraphicsWindowEmbedded does not pump or process the OS's
+        // message loop.  In environments requiring a message loop in client
+        // code, something other than the GraphicsWindowEmbedded must run
+        // that loop.
 };
 
 struct GraphicsWindowFunctionProxy
