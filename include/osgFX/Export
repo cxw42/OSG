@@ -19,9 +19,17 @@
     #  if defined( OSG_LIBRARY_STATIC )
     #    define OSGFX_EXPORT
     #  elif defined( OSGFX_LIBRARY )
-    #    define OSGFX_EXPORT   __declspec(dllexport)
+    #    if defined( __clang__ )
+    #      define OSGFX_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGFX_EXPORT   __declspec(dllexport)
+    #    endif
     #  else
-    #    define OSGFX_EXPORT   __declspec(dllimport)
+    #    if defined( __clang__ )
+    #      define OSGFX_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGFX_EXPORT   __declspec(dllimport)
+    #    endif
     #  endif
 #else
     #  define OSGFX_EXPORT

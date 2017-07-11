@@ -28,16 +28,24 @@
     #pragma warning( disable : 4996 )
 #endif
 
-#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__) || defined( __BCPLUSPLUS__) || defined( __MWERKS__)
+#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__) || defined( __BCPLUSPLUS__)  || defined( __MWERKS__)
     #  if defined( OSG_LIBRARY_STATIC )
-        #    define OSGVIEWER_EXPORT
-        #  elif defined( OSGVIEWER_LIBRARY )
-        #    define OSGVIEWER_EXPORT   __declspec(dllexport)
-        #  else
-        #    define OSGVIEWER_EXPORT   __declspec(dllimport)
-        #endif
+    #    define OSGVIEWER_EXPORT
+    #  elif defined( OSGVIEWER_LIBRARY )
+    #    if defined( __clang__ )
+    #      define OSGVIEWER_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGVIEWER_EXPORT   __declspec(dllexport)
+    #    endif
+    #  else
+    #    if defined( __clang__ )
+    #      define OSGVIEWER_EXPORT   __attribute__((visibility("default")))
+    #    else
+    #      define OSGVIEWER_EXPORT   __declspec(dllimport)
+    #    endif
+    #  endif
 #else
-        #define OSGVIEWER_EXPORT
+    #  define OSGVIEWER_EXPORT
 #endif
 
 #endif
