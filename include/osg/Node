@@ -373,12 +373,11 @@ class OSG_EXPORT Node : public Object
         * would be processed and child Nodes would be examined.
         */
         typedef unsigned int NodeMask;
+
         /** Set the node mask.*/
         inline void setNodeMask(NodeMask nm) { _nodeMask = nm; }
         /** Get the node Mask.*/
         inline NodeMask getNodeMask() const { return _nodeMask; }
-
-
 
         /** Set the node's StateSet.*/
         void setStateSet(osg::StateSet* stateset);
@@ -526,6 +525,7 @@ class OSG_EXPORT Node : public Object
 
         ref_ptr<StateSet> _stateset;
 
+        NO_CXX11_MOVE(Node)
 };
 
 }

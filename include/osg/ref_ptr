@@ -22,6 +22,16 @@
 #include <string>
 #endif
 
+// Macro for making sure we don't get automatically-generated move functions
+// in C++11
+#if __cplusplus > 201103L
+#define NO_CXX11_MOVE(ty) \
+        ty ( ty && ) = delete; \
+        ty & operator=( ty && ) = delete;
+#else
+#define NO_CXX11_MOVE(ty)
+#endif
+
 namespace osg {
 
 template<typename T> class observer_ptr;
@@ -103,6 +113,7 @@ class ref_ptr
 #endif
             return *_ptr;
         }
+
         T* operator->() const
         {
 #ifdef OSG_USE_REF_PTR_SAFE_DEREFERENCE
@@ -126,6 +137,8 @@ class ref_ptr
         T* release() { T* tmp=_ptr; if (_ptr) _ptr->unref_nodelete(); _ptr=0; return tmp; }
 
         void swap(ref_ptr& rp) { T* tmp=_ptr; _ptr=rp._ptr; rp._ptr=tmp; }
+
+        NO_CXX11_MOVE(ref_ptr)
 
     private:
 

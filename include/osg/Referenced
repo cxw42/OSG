@@ -20,6 +20,8 @@
 #include <OpenThreads/Mutex>
 #include <OpenThreads/Atomic>
 
+#include "ref_ptr"
+
 #if !defined(_OPENTHREADS_ATOMIC_USE_MUTEX)
 # define _OSG_REFERENCED_USE_ATOMIC_OPERATIONS
 #endif
@@ -53,7 +55,7 @@ class OSG_EXPORT Referenced
         Referenced();
 
         /** Deprecated, Referenced is now always uses thread safe ref/unref, use default Refernced() constructor instead */
-        explicit Referenced(bool threadSafeRefUnref);
+        explicit Referenced(bool /*threadSafeRefUnref*/);
 
         Referenced(const Referenced&);
 
@@ -190,6 +192,8 @@ class OSG_EXPORT Referenced
 
         mutable void*                   _observerSet;
 #endif
+
+        NO_CXX11_MOVE(Referenced)
 };
 
 // intrusive_ptr_add_ref and intrusive_ptr_release allow

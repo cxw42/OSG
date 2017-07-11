@@ -269,8 +269,6 @@ class OSG_EXPORT Object : public Referenced
         /** Get const user data.*/
         virtual const Referenced* getUserData() const;
 
-
-
         /** Convenience method that casts the named UserObject to osg::TemplateValueObject<T> and gets the value.
           * To use this template method you need to include the osg/ValueObject header.*/
         template<typename T>
@@ -301,6 +299,8 @@ class OSG_EXPORT Object : public Referenced
 
         /** disallow any copy operator.*/
         Object& operator = (const Object&) { return *this; }
+
+        NO_CXX11_MOVE(Object)
 };
 
 template<typename T>
@@ -374,14 +374,15 @@ T* cloneType(const T* t)
 /** DummyObject that can be used as placeholder but otherwise has no other functionality.*/
 class DummyObject : public osg::Object
 {
+protected:
+    virtual ~DummyObject() {}
 public:
     DummyObject() {}
     DummyObject(const DummyObject& org, const CopyOp& copyop) :
         Object(org, copyop) {}
 
     META_Object(osg, DummyObject)
-protected:
-    virtual ~DummyObject() {}
+    NO_CXX11_MOVE(DummyObject)
 };
 
 
