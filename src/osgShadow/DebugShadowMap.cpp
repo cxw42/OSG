@@ -280,6 +280,9 @@ bool DebugShadowMap::ViewData::DebugMatrix
     return result;
 }
 
+// Definition of static member used as flag in setDebugPolytope
+const ConvexPolyhedron DebugShadowMap::ViewData::noPolyhedronSpecified;
+
 void DebugShadowMap::ViewData::setDebugPolytope
     ( const char * name, const ConvexPolyhedron & polytope,
       osg::Vec4 colorOutline, osg::Vec4 colorInside )
@@ -287,7 +290,7 @@ void DebugShadowMap::ViewData::setDebugPolytope
     if( !getDebugDraw() ) return;
 
     const ConvexPolyhedron* polytope_ptr = &polytope;
-    if( polytope_ptr == NULL ) { // delete
+    if( polytope_ptr == NULL || polytope_ptr == &noPolyhedronSpecified ) { // delete
         PolytopeGeometry & pg = _polytopeGeometryMap[ std::string( name ) ];
         for( unsigned int i = 0; i < VECTOR_LENGTH( pg._geometry ) ; i++ )
         {

@@ -171,7 +171,7 @@ protected:
                 const osg::Camera * shadowCam );
 
             void setDebugPolytope( const char * name,
-                const ConvexPolyhedron & polytope = *(ConvexPolyhedron*)( NULL ),
+                const ConvexPolyhedron & polytope = noPolyhedronSpecified,
                 osg::Vec4 colorOutline = osg::Vec4(0,0,0,0),
                 osg::Vec4 colorInside = osg::Vec4(0,0,0,0) );
 
@@ -196,6 +196,10 @@ protected:
             virtual void releaseGLObjects(osg::State* = 0) const;
 
 
+            private:
+
+            /// A marker for the default argument of setDebugPolytope()
+            static const ConvexPolyhedron noPolyhedronSpecified;
         };
 
         META_ViewDependentShadowTechniqueData( ThisClass, ViewData )
