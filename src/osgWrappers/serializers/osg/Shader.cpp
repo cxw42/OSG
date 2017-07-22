@@ -1,4 +1,5 @@
 #include <osg/Shader>
+#include <osg/ValueObject>
 #include <osgDB/ObjectWrapper>
 #include <osgDB/InputStream>
 #include <osgDB/OutputStream>
@@ -44,6 +45,44 @@ static bool writeShaderSource( osgDB::OutputStream& os, const osg::Shader& shade
     return true;
 }
 
+/// Make the shader source code accessible to scripts.
+/// TODO use a PropByValSerializer or some such instead.
+struct ShaderSourceMethod : public osgDB::MethodObject
+{
+    /// Called as source(new_text), set the shader source to new_text.
+    /// Called as source(), return the current shader source.
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& inputParameters
+                      , osg::Parameters& outputParameters) const
+    {
+        osg::Shader *shader = dynamic_cast<osg::Shader*>(objectPtr);
+        if(!shader) return false;
+
+        if(inputParameters.size()<1) {          // getter
+            outputParameters.push_back(
+                    new osg::StringValueObject(shader->getShaderSource()));
+        }
+        else                                    // setter
+        {
+            // For now, only support StringValueObjects for simplicity.
+            osg::StringValueObject *svo =
+                dynamic_cast<osg::StringValueObject *>(inputParameters[0].get());
+
+            if(svo) {
+                shader->setShaderSource(svo->getValue());
+                OSG_INFO << "New shader source:\n========" << shader->getShaderSource() << "\n========" << std::endl;
+            }
+            else
+            {
+                OSG_NOTICE << "Cannot get shader source" << std::endl;
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
 REGISTER_OBJECT_WRAPPER( Shader,
                          new osg::Shader,
                          osg::Shader,
@@ -61,4 +100,7 @@ REGISTER_OBJECT_WRAPPER( Shader,
 
     ADD_USER_SERIALIZER( ShaderSource );  // _shaderSource
     ADD_OBJECT_SERIALIZER( ShaderBinary, osg::ShaderBinary, NULL );  // _shaderBinary
+
+    // Custom methods
+    ADD_METHOD_OBJECT( "source", ShaderSourceMethod );      // HACK.
 }

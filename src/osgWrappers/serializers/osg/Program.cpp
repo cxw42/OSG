@@ -145,6 +145,67 @@ static bool writeComputeGroups( osgDB::OutputStream& os, const osg::Program& att
     return true;
 }
 
+/// Make the list of shaders accessible to scripts.
+/// TODO use a VectorSerializer or some such instead.
+struct ShaderListMethod : public osgDB::MethodObject
+{
+    /// Called as shader('add', shader), add #shader
+    /// Called as shader('remove', shader), remove #shader.
+    /// No output parameters.
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& inputParameters
+                      , osg::Parameters& //outputParameters
+                    ) const
+    {
+        osg::Program *pgm = dynamic_cast<osg::Program*>(objectPtr);
+        if(!pgm) return false;
+
+        if(inputParameters.size()<2)
+        {
+            OSG_NOTICE << "Call as pgm:shader(cmd, shader).  cmd = 'add' or 'remove'." << std::endl;
+            return false;
+        }
+
+        osg::Shader *shader = dynamic_cast<osg::Shader*>(inputParameters[1].get());
+        if(!shader)
+        {
+            OSG_NOTICE << "Cannot get shader.  Call as pgm:shader(cmd, shader)" << std::endl;
+            return false;
+        }
+
+        // Get command.  For now, only support StringValueObjects for simplicity.
+        osg::StringValueObject *svo =
+            dynamic_cast<osg::StringValueObject *>(inputParameters[0].get());
+
+        std::string cmd;
+        if(svo) {
+            cmd = svo->getValue();
+        }
+        else
+        {
+            OSG_NOTICE << "Cannot get command - call as pgm:shader(cmd string, shader)" << std::endl;
+            return false;
+        }
+
+        // Do the work
+        if(cmd == "add")
+        {
+            pgm->addShader(shader);
+        }
+        else if(cmd == "remove")
+        {
+            pgm->removeShader(shader);
+        }
+        else
+        {
+            OSG_NOTICE << "Invalid command.  Commands are 'add' and 'remove'." << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+};
+
 REGISTER_OBJECT_WRAPPER( Program,
                          new osg::Program,
                          osg::Program,
@@ -167,4 +228,7 @@ REGISTER_OBJECT_WRAPPER( Program,
         ADD_USER_SERIALIZER( FeedBackVaryingsName );
         ADD_USER_SERIALIZER( FeedBackMode );
     }
+
+    // Custom methods
+    ADD_METHOD_OBJECT( "shader", ShaderListMethod );      // HACK.
 }

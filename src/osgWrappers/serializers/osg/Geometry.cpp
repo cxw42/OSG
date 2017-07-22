@@ -144,7 +144,7 @@ static bool writeFastPathHint( osgDB::OutputStream& os, const osg::Geometry& geo
 REGISTER_OBJECT_WRAPPER( Geometry,
                          new osg::Geometry,
                          osg::Geometry,
-                         "osg::Object osg::Drawable osg::Geometry" )
+                         "osg::Object osg::Node osg::Drawable osg::Geometry" )
 {
     //ADD_LIST_SERIALIZER( PrimitiveSetList, osg::Geometry::PrimitiveSetList );  // _primitives
     ADD_VECTOR_SERIALIZER( PrimitiveSetList, osg::Geometry::PrimitiveSetList, osgDB::BaseSerializer::RW_OBJECT, 0 );

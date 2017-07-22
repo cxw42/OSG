@@ -67,6 +67,11 @@ protected:
     int _ref;
 };
 
+// Getter for properties on (Lua tables representing) osg::Object instances.
+/// \pre    The Lua stack contains:
+///     - string property name (at the top)
+///     - table representing an osg::Object
+/// \return the number of result values pushed on the Lua stack.
 static int getProperty(lua_State * _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -90,7 +95,12 @@ static int getProperty(lua_State * _lua)
     return 0;
 }
 
-
+// Setter for properties on (Lua tables representing) osg::Object instances.
+/// \pre    The Lua stack contains:
+///     - property value (at the top)
+///     - string property name
+///     - table representing an osg::Object
+/// \return the number of result values pushed on the Lua stack.
 static int setProperty(lua_State* _lua)
 {
     const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
@@ -1385,7 +1395,7 @@ static std::string cpp_tostring(lua_State* _lua, int index)
 /// \return 1, the number of result values pushed on the Lua stack.
 static int tostring(lua_State* _lua)
 {
-    lua_pushstring(_lua, cpp_tostring(_lua,-1) .c_str());
+    lua_pushstring(_lua, cpp_tostring(_lua,-1).c_str());
     return 1;
 }
 
@@ -1697,7 +1707,7 @@ static int callGetNumParents(lua_State* _lua)
     return 1;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  Method calling support
 //
@@ -1743,6 +1753,11 @@ static int callClassMethod(lua_State* _lua)
 
     return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Object creation/deletion/identity support
+//
 
 static int garabageCollectObject(lua_State* _lua)
 {
@@ -1804,6 +1819,51 @@ static int castObject(lua_State * _lua)
     }
     return 0;
 }
+
+/// Return the actual address of an osg::Object, as a number.
+/// \pre    The Lua stack has exactly one argument on it, which is a
+///         table representing an osg::Object.
+/// \post   If the table was valid, the address is left at the stack top.
+/// \return The number of result values pushed on the Lua stack, or a
+///         luaL_error return.
+static int getObjectPtr(lua_State * _lua)
+{
+    // The LuaScriptEngine is available as an upvalue for consistency with
+    // the other global functions created in initialize().  However, we don't
+    // presently need to use lse.
+    //const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
+
+    int n = lua_gettop(_lua);    /* number of arguments */
+    if (n==1)
+    {
+        if (lua_type(_lua, 1)==LUA_TTABLE)
+        {
+            lua_pushstring(_lua, "object_ptr");
+            lua_rawget(_lua, -2);
+            if (lua_type(_lua, -1)==LUA_TUSERDATA)
+            {
+                osg::Object *object = *const_cast<osg::Object**>(reinterpret_cast<const osg::Object**>(lua_touserdata(_lua,-1)));
+                lua_pop(_lua, 1);       // pop the userdata
+
+                lua_pushnumber(_lua,    // push the numeric value
+                        static_cast<lua_Number>(
+                            reinterpret_cast<unsigned long long>(object)
+                        )); // assume a pointer fits in an unsigned long long
+                return 1;
+            }
+            else
+            {
+                return luaL_error(_lua, "Could not get object_ptr from provided table");
+            }
+        }
+    }
+    return luaL_error(_lua, "Invalid call to getObjectPtr");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Object I/O support
+//
 
 static int readObjectFile(lua_State * _lua)
 {
@@ -1976,6 +2036,15 @@ void LuaScriptEngine::initialize()
         lua_setglobal(_lua, "writeFile");
     }
 
+    // provide global "getObjectPtr" method for getting the actual osg::Object
+    // address from a Lua table representing an osg::Object.  This permits
+    // testing identity of osg::Object instances.
+    {
+        lua_pushlightuserdata(_lua, this);
+        lua_pushcclosure(_lua, getObjectPtr, 1);
+        lua_setglobal(_lua, "getObjectPtr");
+    }
+
     // Set up the __newindex and __index methods for looking up implementations
     // of Object properties.  This metatable is used for most objects that
     // are not vectors or maps - \see LuaScriptEngine::pushObject().
@@ -2017,7 +2086,7 @@ void LuaScriptEngine::initialize()
 
     // Set up the __newindex and __index methods for looking up implementations
     // of Container (e.g., vector) properties.  These are supported by
-    // osgDB::VectorBaseSerializer.
+    // osgDB::VectorBaseSerializer.  \see LuaScriptEngine::pushContainer()
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Container");
 
@@ -2035,8 +2104,8 @@ void LuaScriptEngine::initialize()
     }
 
     // Set up the __newindex and __index methods for looking up implementations
-    // of Map (e.g., vector) properties.  These are supported by
-    // osgDB::MapBaseSerializer.
+    // of Map properties.  These are supported by osgDB::MapBaseSerializer.  
+    // \see LuaScriptEngine::pushContainer()
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Map");
 
@@ -2055,7 +2124,7 @@ void LuaScriptEngine::initialize()
 
     // Set up the __gc methods for looking up implementations of Object
     // pointer to do the unref when the associated Lua object is destroyed.
-    // Each Lua object has an "object_ptr" member that calls
+    // Each Lua object has an "object_ptr" userdata member that calls
     // Referenced::unref() on the corresponding osg::Object.
     // \see LuaScriptEngine::pushObject().
     {
@@ -3968,7 +4037,7 @@ void LuaScriptEngine::pushContainer(osg::Object* object, const std::string& prop
     {
         lua_newtable(_lua);
 
-        // set up objbect_ptr to handle ref/unref of the object
+        // set up object_ptr to handle ref/unref of the object
         {
             lua_pushstring(_lua, "object_ptr");
 
@@ -4141,7 +4210,7 @@ void LuaScriptEngine::pushAndCastObject(const std::string& compoundClassName, os
     {
         lua_newtable(_lua);
 
-        // set up objbect_ptr to handle ref/unref of the object
+        // set up object_ptr to handle ref/unref of the object
         {
             lua_pushstring(_lua, "object_ptr");
 
