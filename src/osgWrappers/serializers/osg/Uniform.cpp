@@ -24,6 +24,10 @@ static bool readElements( osgDB::InputStream& is, osg::Uniform& uniform )
             uniform.setArray( static_cast<osg::IntArray*>(array.get()) ); break;
         case osg::Array::UIntArrayType:
             uniform.setArray( static_cast<osg::UIntArray*>(array.get()) ); break;
+        case osg::Array::Int64ArrayType:
+            uniform.setArray( static_cast<osg::Int64Array*>(array.get()) ); break;
+        case osg::Array::UInt64ArrayType:
+            uniform.setArray( static_cast<osg::UInt64Array*>(array.get()) ); break;
         default: break;
         }
     }
@@ -47,10 +51,20 @@ static bool writeElements( osgDB::OutputStream& os, const osg::Uniform& uniform 
         os << (uniform.getIntArray()!=NULL);
         os.writeArray( uniform.getIntArray() );
     }
-    else
+    else if ( uniform.getUIntArray()!= NULL)
     {
         os << (uniform.getUIntArray()!=NULL);
         os.writeArray( uniform.getUIntArray() );
+    }
+    else if ( uniform.getInt64Array()!= NULL)
+    {
+        os << (uniform.getInt64Array()!=NULL);
+        os.writeArray( uniform.getInt64Array() );
+    }
+    else // ( uniform.getUInt64Array()!= NULL)
+    {
+        os << (uniform.getUInt64Array()!=NULL);
+        os.writeArray( uniform.getUInt64Array() );
     }
     return true;
 }

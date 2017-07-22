@@ -331,7 +331,7 @@ int Uniform::compareData(const Uniform& rhs) const
         return memcmp( _uintArray->getDataPointer(), rhs._uintArray->getDataPointer(),
             _uintArray->getTotalDataSize() );
     }
-    
+
     else if( _uint64Array.valid() )
     {
         if( ! rhs._uint64Array ) return 1;
@@ -339,7 +339,7 @@ int Uniform::compareData(const Uniform& rhs) const
         return memcmp( _uint64Array->getDataPointer(), rhs._uint64Array->getDataPointer(),
             _uint64Array->getTotalDataSize() );
     }
-    
+
     else if( _int64Array.valid() )
     {
         if( ! rhs._int64Array ) return 1;
@@ -2755,7 +2755,7 @@ void Uniform::apply(const GLExtensions* ext, GLint location) const
         break;
 
     case UNSIGNED_INT64:
-        if( _uint64Array.valid() ){ 
+        if( _uint64Array.valid() ) {
             if (ext->glUniform1ui64v)
                 ext->glUniform1ui64v( location, num, &_uint64Array->front() );
             else
