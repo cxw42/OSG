@@ -2104,7 +2104,7 @@ void LuaScriptEngine::initialize()
     }
 
     // Set up the __newindex and __index methods for looking up implementations
-    // of Map properties.  These are supported by osgDB::MapBaseSerializer.  
+    // of Map properties.  These are supported by osgDB::MapBaseSerializer.
     // \see LuaScriptEngine::pushContainer()
     {
         luaL_newmetatable(_lua, "LuaScriptEngine.Map");
@@ -3548,6 +3548,8 @@ bool LuaScriptEngine::getelements(int pos, int numElements, int type) const
     return true;
 }
 
+/// Return the OSG serializer type of the Lua entity at position #pos on the
+/// Lua stack.
 osgDB::BaseSerializer::Type LuaScriptEngine::getType(int pos) const
 {
     int abs_pos = getAbsolutePos(pos);
@@ -3607,6 +3609,13 @@ osgDB::BaseSerializer::Type LuaScriptEngine::getType(int pos) const
             {
                 return osgDB::BaseSerializer::RW_BOUNDINGBOXD;
             }
+#if 0
+            else if ((numStringKeys==0) && (numNumberKeys>0) && (numNumberFields==numNumberKeys))
+            {   // general array - TODO
+                return osgDB::BaseSerializer::RW_VECTOR;
+            }
+#endif
+
             // not supported
             OSG_NOTICE<<"Warning: LuaScriptEngine::getType() Lua table configuration not supported."<<std::endl;
             break;

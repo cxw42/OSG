@@ -123,7 +123,7 @@ void Uniform::setNumElements( unsigned int numElements )
 void Uniform::allocateDataArray()
 {
     // if one array is already allocated, the job is done.
-    if( _floatArray.valid() || _doubleArray.valid() || _intArray.valid() || _uintArray.valid() ) return;
+    if( _floatArray.valid() || _doubleArray.valid() || _intArray.valid() || _uintArray.valid() || _int64Array.valid() || _uint64Array.valid() ) return;
 
     // array cannot be created until _type and _numElements are specified
     int arrayNumElements = getInternalArrayNumElements();
@@ -147,6 +147,14 @@ void Uniform::allocateDataArray()
                 _uintArray = new UIntArray(arrayNumElements);
                 return;
 
+            case GL_INT64_ARB:
+                _int64Array = new Int64Array(arrayNumElements);
+                return;
+
+            case GL_UNSIGNED_INT64_ARB:
+                _uint64Array = new UInt64Array(arrayNumElements);
+                return;
+
             default:
                 break;
         }
@@ -160,7 +168,7 @@ bool Uniform::setArray( FloatArray* array )
     // incoming array must match configuration of the Uniform
     if( getInternalArrayType(getType())!=GL_FLOAT || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(float) : incompatible array" << std::endl;
         return false;
     }
 
@@ -181,7 +189,7 @@ bool Uniform::setArray( DoubleArray* array )
     // incoming array must match configuration of the Uniform
     if( getInternalArrayType(getType())!=GL_DOUBLE || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(double) : incompatible array" << std::endl;
         return false;
     }
 
@@ -202,7 +210,7 @@ bool Uniform::setArray( IntArray* array )
     // incoming array must match configuration of the Uniform
     if( getInternalArrayType(getType())!=GL_INT || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(int) : incompatible array" << std::endl;
         return false;
     }
 
@@ -223,7 +231,7 @@ bool Uniform::setArray( UIntArray* array )
     // incoming array must match configuration of the Uniform
     if( getInternalArrayType(getType())!=GL_UNSIGNED_INT || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(uint) : incompatible array" << std::endl;
         return false;
     }
 
@@ -241,9 +249,9 @@ bool Uniform::setArray( UInt64Array* array )
     if( !array ) return false;
 
     // incoming array must match configuration of the Uniform
-    if( getInternalArrayType(getType())!=GL_UNSIGNED_INT || getInternalArrayNumElements()!=array->getNumElements() )
+    if( getInternalArrayType(getType())!=GL_UNSIGNED_INT64_ARB || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(uint64) : incompatible array" << std::endl;
         return false;
     }
 
@@ -262,9 +270,9 @@ bool Uniform::setArray( Int64Array* array )
     if( !array ) return false;
 
     // incoming array must match configuration of the Uniform
-    if( getInternalArrayType(getType())!=GL_UNSIGNED_INT || getInternalArrayNumElements()!=array->getNumElements() )
+    if( getInternalArrayType(getType())!=GL_INT64_ARB || getInternalArrayNumElements()!=array->getNumElements() )
     {
-        OSG_WARN << "Uniform::setArray : incompatible array" << std::endl;
+        OSG_WARN << "Uniform::setArray(int64) : incompatible array" << std::endl;
         return false;
     }
 
@@ -2600,6 +2608,47 @@ bool Uniform::getElement( unsigned int index, bool& b0, bool& b1, bool& b2, bool
     b2 = ((*_intArray)[j+2] != 0);
     b3 = ((*_intArray)[j+3] != 0);
     return true;
+}
+
+Array* Uniform::getArray()
+{
+    switch( getInternalArrayType(getType()) )
+    {
+        case GL_FLOAT: return _floatArray;
+        case GL_DOUBLE: return _doubleArray;
+        case GL_INT: return _intArray;
+        case GL_UNSIGNED_INT: return _uintArray;
+        case GL_INT64_ARB: return _int64Array;
+        case GL_UNSIGNED_INT64_ARB: return _uint64Array;
+        default: break;
+    }
+    return 0;
+}
+
+const Array* Uniform::getArray() const
+{
+    return const_cast<const Array*>(
+            const_cast<Uniform*>(this)->getArray()
+    );
+}
+
+/// Set the array.  This is a bit brute-force at the moment.
+bool Uniform::setArray(Array* array)
+{
+    if( FloatArray *farr = dynamic_cast<FloatArray*>(array) )
+        return setArray(farr);
+    else if( DoubleArray *darr = dynamic_cast<DoubleArray*>(array) )
+        return setArray(darr);
+    else if( IntArray *iarr = dynamic_cast<IntArray*>(array) )
+        return setArray(iarr);
+    else if( UIntArray *uiarr = dynamic_cast<UIntArray*>(array) )
+        return setArray(uiarr);
+    else if( Int64Array *i64arr = dynamic_cast<Int64Array*>(array) )
+        return setArray(i64arr);
+    else if( UInt64Array *ui64arr = dynamic_cast<UInt64Array*>(array) )
+        return setArray(ui64arr);
+    else
+        return false;
 }
 
 unsigned int Uniform::getNameID() const

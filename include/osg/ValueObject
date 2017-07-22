@@ -68,6 +68,10 @@ class ValueObject : public Object
 
         META_Object(osg, ValueObject)
 
+        /// Visitor to get the value out of a ValueObject.
+        /// When ValueObject::get(visitor) is called, the corresponding apply()
+        /// will be called and will be provided the value currently in the
+        /// ValueObject.
         class GetValueVisitor
         {
         public:
@@ -79,6 +83,10 @@ class ValueObject : public Object
             virtual void apply(unsigned short /*value*/) {}
             virtual void apply(int /*value*/) {}
             virtual void apply(unsigned int /*value*/) {}
+            virtual void apply(long /*value*/) {}
+            virtual void apply(unsigned long /*value*/) {}
+            virtual void apply(long long /*value*/) {}
+            virtual void apply(unsigned long long /*value*/) {}
             virtual void apply(float /*value*/) {}
             virtual void apply(double /*value*/) {}
             virtual void apply(const std::string& /*value*/) {}
@@ -125,6 +133,11 @@ class ValueObject : public Object
             virtual void apply(const osg::BoundingSphered& /*value*/) {}
         };
 
+        /// Visitor to put the value into a ValueObject.
+        /// When ValueObject::set(visitor) is called, the corresponding apply()
+        /// will be called with a reference to the value stored in the.
+        /// ValueObject.  apply() can then assign a value via that reference
+        /// to set what is stored in the ValueObject.
         class SetValueVisitor
         {
         public:
@@ -136,6 +149,10 @@ class ValueObject : public Object
             virtual void apply(unsigned short& /*value*/) {}
             virtual void apply(int& /*value*/) {}
             virtual void apply(unsigned int& /*value*/) {}
+            virtual void apply(long& /*value*/) {}
+            virtual void apply(unsigned long& /*value*/) {}
+            virtual void apply(long long& /*value*/) {}
+            virtual void apply(unsigned long long& /*value*/) {}
             virtual void apply(float& /*value*/) {}
             virtual void apply(double& /*value*/) {}
             virtual void apply(std::string& /*value*/) {}
@@ -182,7 +199,11 @@ class ValueObject : public Object
             virtual void apply(osg::BoundingSphered& /*value*/) {}
         };
 
+        /// Get the value currently stored in the ValueObject, and provide
+        /// it to a GetValueVisitor.
         virtual bool get(GetValueVisitor& /*gvv*/) const { return false; }
+
+        /// Assign the value in the ValueObject to that provided by a SetValueVisitor.
         virtual bool set(SetValueVisitor& /*gvv*/) { return false; }
 
 protected:
@@ -249,6 +270,10 @@ META_ValueObject(short, ShortValueObject)
 META_ValueObject(unsigned short, UShortValueObject)
 META_ValueObject(int, IntValueObject)
 META_ValueObject(unsigned int, UIntValueObject)
+META_ValueObject(long, LongValueObject)
+META_ValueObject(unsigned long, ULingValueObject)
+META_ValueObject(long long, Int64ValueObject)
+META_ValueObject(unsigned long long, UInt64ValueObject)
 META_ValueObject(float, FloatValueObject)
 META_ValueObject(double, DoubleValueObject)
 META_ValueObject(Vec2f, Vec2fValueObject)
