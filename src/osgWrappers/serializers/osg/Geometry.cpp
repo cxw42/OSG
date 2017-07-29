@@ -141,6 +141,29 @@ static bool writeFastPathHint( osgDB::OutputStream& os, const osg::Geometry& geo
     return true;
 }
 
+/// Dirty the geometry.  Call this when you have updated the contents of
+/// the geometry.
+struct DirtyGeometryMethod : public osgDB::MethodObject
+{
+    /// Called as dirty(), dirty everything.
+    /// TODO support string parameters, to specify whether to dirty arrays,
+    /// bounds, GL objects, or all.
+    /// No output parameters.
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters
+                      , osg::Parameters& //outputParameters
+                    ) const
+    {
+        osg::Geometry *geom = dynamic_cast<osg::Geometry*>(objectPtr);
+        if(!geom) return false;
+
+        geom->dirtyBound();
+        geom->dirtyGLObjects();
+
+        return true;
+    }
+};
+
 REGISTER_OBJECT_WRAPPER( Geometry,
                          new osg::Geometry,
                          osg::Geometry,
@@ -182,4 +205,7 @@ REGISTER_OBJECT_WRAPPER( Geometry,
 
 
     wrapper->addFinishedObjectReadCallback( new GeometryFinishedObjectReadCallback() );
+
+    // Custom methods
+    ADD_METHOD_OBJECT( "dirty", DirtyGeometryMethod );
 }
