@@ -30,6 +30,8 @@ namespace {     // avoid namespace pollution from exported symbols
 ////////////////////////////////////////////////////////////////////////////
 // Helper routines
 
+// === Input parameter unmarshaling ===
+
 /// Common fields for a templated extractor.
 template<class ResultT>
 struct VOGetBase: public osg::ValueObject::GetValueVisitor
@@ -44,7 +46,7 @@ struct VOGetBase: public osg::ValueObject::GetValueVisitor
 template<class ResultT>
 struct VOGet: public VOGetBase<ResultT> {};
 
-/// Specialization for Vec3d
+/// Specialization for Vec3d - promotes Vec3f to Vec3d
 template<> struct VOGet<osg::Vec3d>: public VOGetBase<osg::Vec3d>
 {
     virtual void apply(const osg::Vec3d& v) { value=v; ok=true; }
@@ -66,6 +68,17 @@ bool extract(osg::Object* obj, ResultT& retval)
     return true;
 }
 
+// === Output parameter marshaling ===
+
+// Append a value to an output-parameter array
+template<class T>
+void output_value(T& retval, osg::Parameters& outs)
+{
+    typedef osg::TemplateValueObject<T> VO;
+    osg::ref_ptr<VO> retval_object(new VO(retval));
+    outs.push_back(retval_object);
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // View-matrix method implementations
 
@@ -77,7 +90,9 @@ struct ViewLookAt: public osgDB::MethodObject {
         if (ins.size()!=3) return false;
 
         // Unmarshal the Vec3ds
-        osg::Vec3d eye, center, up;  //makeLookAt takes Vec3d even for Matrixf
+        osg::Vec3d eye, center, up;
+            // take Vec3d even for Matrixf because VOGet<Vec3d> can promote
+            // Vec3f values.
 
         if(!extract(ins[0].get(), eye)) return false;
         if(!extract(ins[1].get(), center)) return false;
@@ -88,9 +103,29 @@ struct ViewLookAt: public osgDB::MethodObject {
         retval.makeLookAt(eye, center, up);
 
         // Marshal the resulting view matrix
-        osg::ref_ptr<osg::MatrixValueObject> retval_object(new osg::MatrixValueObject(retval));
-        outs.push_back(retval_object);
+        output_value(retval, outs);
+        return true;
+    }
+};
 
+////////////////////////////////////////////////////////////////////////////
+// Transformation-matrix method implementations
+
+/// Matrix scale(Vec3 how_much): make a scaling matrix
+struct XformScale: public osgDB::MethodObject {
+    virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
+    {
+        if (ins.size()!=1) return false;
+
+        // Unmarshal
+        osg::Vec3d how_much;
+        if(!extract(ins[0].get(), how_much)) return false;
+
+        // Do the work
+        osg::Matrix retval;
+        retval.scale(how_much);
+
+        output_value(retval, outs);
         return true;
     }
 };
@@ -112,5 +147,8 @@ REGISTER_OBJECT_WRAPPER( ScriptUtils,
 
     // - view: View-matrix functions -
     ADD_METHOD_OBJECT( "viewLookAt", ViewLookAt );
+
+    // - xform: Transformation-matrix functions -
+    ADD_METHOD_OBJECT( "xformScale", XformScale );
 
 }
