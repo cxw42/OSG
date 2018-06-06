@@ -16,6 +16,7 @@
 /// and other useful functions.  It is not expected to be serialized.
 /// This file implements those functions so that scripts can access them.
 
+#include <osg/Notify>
 #include <osg/Matrix>
 #include <osg/Vec3d>
 #include <osg/Vec3f>
@@ -45,6 +46,13 @@ struct VOGetBase: public osg::ValueObject::GetValueVisitor
 /// we need.
 template<class ResultT>
 struct VOGet: public VOGetBase<ResultT> {};
+
+/// Specialization for double - promotes float to double
+template<> struct VOGet<double>: public VOGetBase<double>
+{
+    virtual void apply(const double v) { value=v; ok=true; }
+    virtual void apply(const float v) { value=v; ok=true; }
+};
 
 /// Specialization for Vec3d - promotes Vec3f to Vec3d
 template<> struct VOGet<osg::Vec3d>: public VOGetBase<osg::Vec3d>
@@ -111,7 +119,7 @@ struct ViewLookAt: public osgDB::MethodObject {
 ////////////////////////////////////////////////////////////////////////////
 // Transformation-matrix method implementations
 
-/// Matrix scale(Vec3 how_much): make a scaling matrix
+/// Matrix xformScale(Vec3 how_much): make a scaling matrix
 struct XformScale: public osgDB::MethodObject {
     virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
     {
@@ -123,7 +131,51 @@ struct XformScale: public osgDB::MethodObject {
 
         // Do the work
         osg::Matrix retval;
-        retval.scale(how_much);
+        retval.makeScale(how_much);
+
+        output_value(retval, outs);
+        return true;
+    }
+};
+
+/// Matrix xformTranslate(Vec3 by_how_much): make a translation matrix
+struct XformTranslate: public osgDB::MethodObject {
+    virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
+    {
+        if (ins.size()!=1) return false;
+        osg::Vec3d how_much;
+        if(!extract(ins[0].get(), how_much)) return false;
+        osg::Matrix retval;
+        retval.makeTranslate(how_much);
+        output_value(retval, outs);
+        return true;
+    }
+};
+
+/// Matrix xformRotate(...): make a rotation matrix.
+/// Arg formats:
+///     xformRotate(Vec3 from, Vec3 to)
+///     xformRotate(double angle, Vec3 axis)
+struct XformRotate: public osgDB::MethodObject {
+    virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
+    {
+        if (ins.size()!=2) return false;
+        osg::Vec3d from, to, axis;
+        double angle;
+        osg::Matrix retval;
+
+        if(extract(ins[0].get(), from)) {   //(Vec3 from, Vec3 to)
+            if(!extract(ins[1].get(), to)) return false;
+            retval.makeRotate(from, to);
+
+        } else if(extract(ins[0].get(), angle)) {   //(double angle, Vec3 axis)
+            if(!extract(ins[1].get(), axis)) return false;
+            retval.makeRotate(angle, axis);
+
+        } else {    // Invalid args
+            OSG_NOTICE << "invalid args to XformRotate" << std::endl;
+            return false;
+        }
 
         output_value(retval, outs);
         return true;
@@ -150,5 +202,7 @@ REGISTER_OBJECT_WRAPPER( ScriptUtils,
 
     // - xform: Transformation-matrix functions -
     ADD_METHOD_OBJECT( "xformScale", XformScale );
+    ADD_METHOD_OBJECT( "xformTranslate", XformTranslate );
+    ADD_METHOD_OBJECT( "xformRotate", XformRotate );
 
 }
