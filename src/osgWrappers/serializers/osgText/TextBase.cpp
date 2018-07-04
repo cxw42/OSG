@@ -192,4 +192,25 @@ REGISTER_OBJECT_WRAPPER( osgText_TextBase,
     END_BITFLAGS_SERIALIZER();
     ADD_FLOAT_SERIALIZER( BoundingBoxMargin, 0.0f );  // _textBBMargin
     ADD_VEC4_SERIALIZER( BoundingBoxColor, osg::Vec4() );  // _textBBColor
+
+    // New serializers for script use.  NOTE: these are redundant with the
+    // user serializers above.  TODO eventually: if Robert approves, use these
+    // instead of the user serializers.
+
+    // Replace Font serializer
+    ADD_STRING_SERIALIZER(FontName, "");
+
+    // Replace FontSize serializer
+    ADD_UINT_SERIALIZER(ResolutionW, 32);   // defaults from TextBase ctor
+    ADD_UINT_SERIALIZER(ResolutionH, 32);
+
+    // Replace CharacterSize serializer
+    ADD_FLOAT_SERIALIZER(CharHeight, 32.0f);
+    ADD_FLOAT_SERIALIZER(CharAspectRatio, 1.0f);
+
+    // Replace Text serializer.  NOTE: this assumes that the
+    // readWrappedString() and writeWrappedString() implementations being used
+    // are 8-bit clean and can handle UTF-8.
+    ADD_STRING_SERIALIZER(TextUTF8, "");
+
 }

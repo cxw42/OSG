@@ -90,4 +90,17 @@ REGISTER_OBJECT_WRAPPER( osgText_Text,
     END_ENUM_SERIALIZER();  // _colorGradientMode
 
     ADD_USER_SERIALIZER( ColorGradientCorners );  // _colorGradientTopLeft .. _colorGradientBottomRight
+
+    // New accessors to replace the user serializers, for script use.
+
+    // Replace the BackdropOffset serializer
+    ADD_FLOAT_SERIALIZER(BackdropOffsetH, 0.07f);
+    ADD_FLOAT_SERIALIZER(BackdropOffsetV, 0.07f);
+
+    // Replace the ColorGradientCorners serializer
+    ADD_VEC4_SERIALIZER(CGTopLeft, osg::Vec4());
+    ADD_VEC4_SERIALIZER(CGBottomLeft, osg::Vec4());
+    ADD_VEC4_SERIALIZER(CGBottomRight, osg::Vec4());
+    ADD_VEC4_SERIALIZER(CGTopRight, osg::Vec4());
+
 }

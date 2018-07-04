@@ -280,6 +280,47 @@ public:
 
     void addGlyphQuad(Glyph* glyph, const osg::Vec2& minc, const osg::Vec2& maxc, const osg::Vec2& mintc, const osg::Vec2& maxtc);
 
+    // New accessors for script use
+    float getBackdropOffsetH() const { return getBackdropHorizontalOffset(); }
+    float getBackdropOffsetV() const { return getBackdropVerticalOffset(); }
+
+    void setBackdropOffsetH(float hoffset) {
+        setBackdropOffset(hoffset, getBackdropVerticalOffset());
+    }
+
+    void setBackdropOffsetV(float voffset) {
+        setBackdropOffset(getBackdropHorizontalOffset(), voffset);
+    }
+
+    const osg::Vec4& getCGTopLeft() const { return getColorGradientTopLeft(); }
+    const osg::Vec4& getCGBottomLeft() const { return getColorGradientBottomLeft(); }
+    const osg::Vec4& getCGBottomRight() const { return getColorGradientBottomRight(); }
+    const osg::Vec4& getCGTopRight() const { return getColorGradientTopRight(); }
+
+    void setCGTopLeft(const osg::Vec4& value) {
+        setColorGradientCorners(value,
+                getColorGradientBottomLeft(), getColorGradientBottomRight(),
+                getColorGradientTopRight());
+    }
+
+    void setCGBottomLeft(const osg::Vec4& value) {
+        setColorGradientCorners(getColorGradientTopLeft(),
+                value, getColorGradientBottomRight(),
+                getColorGradientTopRight());
+    }
+
+    void setCGBottomRight(const osg::Vec4& value) {
+        setColorGradientCorners(getColorGradientTopLeft(),
+                getColorGradientBottomLeft(), value,
+                getColorGradientTopRight());
+    }
+
+    void setCGTopRight(const osg::Vec4& value) {
+        setColorGradientCorners(getColorGradientTopLeft(),
+                getColorGradientBottomLeft(), getColorGradientBottomRight(),
+                value);
+    }
+
 protected:
 
     virtual ~Text();

@@ -83,8 +83,8 @@ public:
     void setText(const std::string& text);
 
     /** Set the text using a Unicode encoded std::string, which is converted to an internal TextString.
-      * The encoding parameter specificies which Unicode encodeding is used in the std::string. */
-    void setText(const std::string& text,String::Encoding encoding);
+      * The encoding parameter specifies which Unicode encoding is used in the std::string. */
+    void setText(const std::string& text, String::Encoding encoding);
 
     /** Set the text using a wchar_t string,
       * which is converted to an internal TextString.*/
@@ -279,6 +279,70 @@ public:
 
     /** Get the internal matrix used to provide positioning of text.*/
     const osg::Matrix& getMatrix() const { return _matrix; }
+
+    // Additional accessors for scripts
+
+    /// Get the filename of the font, or an empty string if none.
+    const std::string& getFontName() const {
+        static std::string retval;  ///< storage for the return value
+        if(_font.valid()) {
+            retval = _font->getFileName();
+        } else {
+            retval.clear();
+        }
+        return retval;
+    }
+
+    /// Set the filename of the font
+    void setFontName(const std::string& newname) { setFont(newname); }
+
+    /// Get the width portion of the font resolution
+    unsigned int getResolutionW() const { return getFontWidth(); }
+
+    /// Get the height portion of the font resolution
+    unsigned int getResolutionH() const { return getFontHeight(); }
+
+    /// Set the width portion of the font resolution; leave the height portion
+    /// unchanged.  Precondition: _fontSize is valid.  _fontSize is created
+    /// by the TextBase constructor, so this should be OK.
+    void setResolutionW(const unsigned int width) {
+        setFontResolution(width, getFontHeight());
+    }
+
+    /// Set the height portion of the font resolution; leave the width portion
+    /// unchanged.  Precondition: _fontSize is valid.
+    void setResolutionH(const unsigned int height) {
+        setFontResolution(getFontWidth(), height);
+    }
+
+    /// Get the character height.
+    float getCharHeight() const { return getCharacterHeight(); }
+
+    /// Get the character aspect ratio.
+    float getCharAspectRatio() const { return getCharacterAspectRatio(); }
+
+    /// Set the character height.
+    void setCharHeight(const float height) {
+        setCharacterSize(height, getCharacterAspectRatio());
+    }
+
+    /// Set the character aspect ratio.
+    void setCharAspectRatio(const float aspectRatio) {
+        setCharacterSize(getCharacterHeight(), aspectRatio);
+    }
+
+    /// Get the text as a UTF-8 std::string.
+    const std::string& getTextUTF8() const {
+        static std::string retval;  ///< storage for the return value
+        retval = getText().createUTF8EncodedString();
+        return retval;
+    }
+
+    /// Set the text from a UTF-8 std::string.
+    void setTextUTF8(const std::string& utf8str) {
+        setText(utf8str, osgText::String::ENCODING_UTF8);
+    }
+
 
 protected:
 
