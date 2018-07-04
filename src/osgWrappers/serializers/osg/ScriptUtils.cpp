@@ -119,7 +119,7 @@ struct ViewLookAt: public osgDB::MethodObject {
 ////////////////////////////////////////////////////////////////////////////
 // Transformation-matrix method implementations
 
-/// Matrix xformScale(Vec3 how_much): make a scaling matrix
+/// Matrix xformScale(Vec3 how_much): make a scaling matrix.
 struct XformScale: public osgDB::MethodObject {
     virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
     {
@@ -136,9 +136,9 @@ struct XformScale: public osgDB::MethodObject {
         output_value(retval, outs);
         return true;
     }
-};
+}; //XformScale
 
-/// Matrix xformTranslate(Vec3 by_how_much): make a translation matrix
+/// Matrix xformTranslate(Vec3 by_how_much): make a translation matrix.
 struct XformTranslate: public osgDB::MethodObject {
     virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
     {
@@ -150,7 +150,7 @@ struct XformTranslate: public osgDB::MethodObject {
         output_value(retval, outs);
         return true;
     }
-};
+}; //XformTranslate
 
 /// Matrix xformRotate(...): make a rotation matrix.
 /// Arg formats:
@@ -180,7 +180,59 @@ struct XformRotate: public osgDB::MethodObject {
         output_value(retval, outs);
         return true;
     }
-};
+}; //XformRotate
+
+////////////////////////////////////////////////////////////////////////////
+// Quaternion method implementations
+
+/// Quat quatRotate(...): make a rotation quaternion.
+/// Arg formats:
+///     quatRotate(double angle, Vec3 axis)
+///     quatRotate(double angle1, Vec3 axis1, double angle2, Vec3 axis2,
+///                 double angle3, Vec3 axis3)
+struct QuatRotate: public osgDB::MethodObject {
+    virtual bool run(osg::Object* , osg::Parameters& ins, osg::Parameters& outs) const
+    {
+        if(ins.size()==2) {
+            double angle;
+            osg::Vec3d axis;
+            if(extract(ins[0].get(), angle) && extract(ins[1].get(), axis)) {
+                osg::Quat q(angle, axis);
+                output_value(q, outs);
+                return true;
+            }
+            OSG_NOTICE << "quatRotate: invalid parameters (need float angle, vec3 axis)" << std::endl;
+            return false;   // invalid parameters
+
+        } else if(ins.size()==6) {
+            double angles[3];
+            osg::Vec3d axes[3];
+            int argidx = -1;
+
+            for(int i=0; i<2; ++i) {
+                if(!extract(ins[++argidx].get(), angles[i])) {
+                    OSG_NOTICE << "quatRotate: invalid parameter " << argidx << " (need double)" << std::endl;
+                    return false;
+                }
+                if(!extract(ins[++argidx].get(), axes[i])) {
+                    OSG_NOTICE << "quatRotate: invalid parameter " << argidx << " (need vec3)" << std::endl;
+                    return false;
+                }
+            }
+
+            osg::Quat q(angles[0], axes[0],
+                        angles[1], axes[1],
+                        angles[2], axes[2]);
+            output_value(q, outs);
+            return true;
+
+        } else {
+            OSG_NOTICE << "quatRotate: invalid parameter count" << std::endl;
+            return false;   // invalid parameter count
+        }
+
+    }
+}; //QuatRotate
 
 } //end anon namespace
 
@@ -205,4 +257,6 @@ REGISTER_OBJECT_WRAPPER( ScriptUtils,
     ADD_METHOD_OBJECT( "xformTranslate", XformTranslate );
     ADD_METHOD_OBJECT( "xformRotate", XformRotate );
 
+    // - quat: Quaternion functions -
+    ADD_METHOD_OBJECT( "quatRotate", QuatRotate );
 }
