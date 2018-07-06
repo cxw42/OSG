@@ -49,6 +49,8 @@ void AcrossAllScreens::configure(osgViewer::View& view) const
     }
     else
     {
+        OSG_DEBUG << "Setting up across " << numScreens << " screens" << std::endl;
+        OSG_DEBUG << "Original aspect ratio " << aspectRatio << std::endl;
 
         double translate_x = 0.0;
 
@@ -59,6 +61,9 @@ void AcrossAllScreens::configure(osgViewer::View& view) const
             unsigned int width, height;
             wsi->getScreenResolution(si, width, height);
             translate_x += double(width) / (double(height) * aspectRatio);
+            OSG_DEBUG << "  Screen " << i << ' '
+                << std::dec << width << 'x' << height
+                << ": translate_x now " << translate_x << std::endl;
         }
 
         bool stereoSplitScreens = numScreens==2 &&
@@ -123,8 +128,16 @@ void AcrossAllScreens::configure(osgViewer::View& view) const
                 double newAspectRatio = double(traits->width) / double(traits->height);
                 double aspectRatioChange = newAspectRatio / aspectRatio;
 
+                OSG_DEBUG << "  Screen " << i
+                    << ": newAspectRatio " << newAspectRatio
+                    << "; aspectRatioChange " << aspectRatioChange
+                    << "; translation " << translate_x - aspectRatioChange
+                    << std::endl;
+
                 view.addSlave(camera.get(), osg::Matrixd::translate( translate_x - aspectRatioChange, 0.0, 0.0) * osg::Matrix::scale(1.0/aspectRatioChange,1.0,1.0), osg::Matrixd() );
                 translate_x -= aspectRatioChange * 2.0;
+
+                OSG_DEBUG << "  translate_x now " << translate_x << std::endl;
             }
         }
     }
