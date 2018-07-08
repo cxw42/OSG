@@ -28,6 +28,19 @@ static bool writeUserData( osgDB::OutputStream& os, const osg::Object& obj )
     return true;
 }
 
+/// Object clone(): Return a clone of the object.  At present, it's just
+/// a shallow copy.  TODO add a CopyOp.
+struct Clone: public osgDB::MethodObject {
+    virtual bool run(osg::Object *objectPtr, osg::Parameters& ins,
+                osg::Parameters& outs) const
+    {
+        if(!objectPtr) return false;
+
+        osg::CopyOp copyop;     // Shallow copy by default
+        outs.push_back(objectPtr->clone(copyop));
+        return true;
+    }
+}; //Clone
 REGISTER_OBJECT_WRAPPER( Object,
                          new osg::DummyObject,
                          osg::Object,
@@ -47,4 +60,6 @@ REGISTER_OBJECT_WRAPPER( Object,
         REMOVE_SERIALIZER( UserData );
         ADD_OBJECT_SERIALIZER( UserDataContainer, osg::UserDataContainer, NULL );
     }
+
+    ADD_METHOD_OBJECT( "clone", Clone );
 }
