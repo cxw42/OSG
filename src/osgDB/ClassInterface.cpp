@@ -412,6 +412,14 @@ ClassInterface::CPDResult ClassInterface::copyPropertyObjectFromObject(const osg
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, sourceType);
     if (serializer)
     {
+        int usage(serializer->getUsage());
+        if (!( (usage & osgDB::BaseSerializer::READ_WRITE_PROPERTY) ||
+                (usage & osgDB::BaseSerializer::GET_PROPERTY) ))
+        {
+            OSG_NOTICE<<"ClassInterface::copyPropertyObjectFromObject() cannot read unreadable property "<<propertyName<<std::endl;
+            return CPD_FATAL;   // Don't use UserDataContainer as a backup
+        }
+
         if (areTypesCompatible(sourceType, valueType))
         {
             return (serializer->get(*object, valuePtr) ? CPD_OK : CPD_ERROR);
@@ -435,6 +443,14 @@ ClassInterface::CPDResult ClassInterface::copyPropertyObjectToObject(osg::Object
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, destinationType);
     if (serializer)
     {
+        int usage(serializer->getUsage());
+        if (!( (usage & osgDB::BaseSerializer::READ_WRITE_PROPERTY) ||
+                (usage & osgDB::BaseSerializer::SET_PROPERTY) ))
+        {
+            OSG_NOTICE<<"ClassInterface::copyPropertyObjectToObject() cannot write unwriteable property "<<propertyName<<std::endl;
+            return CPD_FATAL;   // Don't use UserDataContainer as a backup
+        }
+
         if (areTypesCompatible(valueType, destinationType))
         {
             return (serializer->set(*object, const_cast<void*>(valuePtr)) ? CPD_OK : CPD_ERROR);
