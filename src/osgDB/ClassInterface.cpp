@@ -314,26 +314,26 @@ osg::Object* ClassInterface::createObject(const std::string& compoundClassName) 
     // return (ow!=0) ? ow->createInstance() : 0;
 }
 
-bool ClassInterface::copyPropertyDataFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType)
+ClassInterface::CPDResult ClassInterface::copyPropertyDataFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType)
 {
     _poi->flush();
 
     osgDB::BaseSerializer::Type sourceType;
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, sourceType);
-    if (!serializer) return false;
+    if (!serializer) return CPD_ERROR;
 
     int usage(serializer->getUsage());
     if (!( (usage & osgDB::BaseSerializer::READ_WRITE_PROPERTY) ||
             (usage & osgDB::BaseSerializer::GET_PROPERTY) ))
     {
         OSG_NOTICE<<"ClassInterface::copyPropertyDataFromObject() cannot read unreadable property "<<propertyName<<std::endl;
-        return false;
+        return CPD_FATAL;   // Don't use UserDataContainer as a backup
     }
 
     if (!areTypesCompatible(sourceType, valueType))
     {
         OSG_NOTICE<<"ClassInterface::copyPropertyDataFromObject() Types are not compatible, valueType = "<<valueType<<", sourceType="<<sourceType<<std::endl;
-        return false;
+        return CPD_FATAL;
     }
 
     if (serializer->write(_outputStream, *object))
@@ -344,27 +344,27 @@ bool ClassInterface::copyPropertyDataFromObject(const osg::Object* object, const
         {
             std::string* string_ptr = reinterpret_cast<std::string*>(valuePtr);
             (*string_ptr) = _poi->_str;
-            return true;
+            return CPD_OK;
         }
         else if (sourceSize==valueSize)
         {
             memcpy(valuePtr, &(_poi->_str[0]), valueSize);
-            return true;
+            return CPD_OK;
         }
         else
         {
             OSG_NOTICE<<"ClassInterface::copyPropertyDataFromObject() Sizes not compatible, sourceSize = "<<sourceSize<<" valueSize = "<<valueSize<<std::endl;
-            return false;
+            return CPD_FATAL;
         }
     }
     else
     {
         OSG_INFO<<"ClassInterface::copyPropertyDataFromObject() serializer write failed."<<std::endl;
-        return false;
+        return CPD_ERROR;
     }
 }
 
-bool ClassInterface::copyPropertyDataToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType)
+ClassInterface::CPDResult ClassInterface::copyPropertyDataToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType)
 {
     // copy data to PropertyInputIterator
     if (valueType==osgDB::BaseSerializer::RW_STRING)
@@ -386,27 +386,27 @@ bool ClassInterface::copyPropertyDataToObject(osg::Object* object, const std::st
                 (usage & osgDB::BaseSerializer::SET_PROPERTY) ))
         {
             OSG_NOTICE<<"ClassInterface::copyPropertyDataToObject() cannot write unwriteable property "<<propertyName<<std::endl;
-            return false;
+            return CPD_FATAL;   // Don't use UserDataContainer as a backup
         }
 
         if (areTypesCompatible(valueType, destinationType))
         {
-            return serializer->read(_inputStream, *object);
+            return (serializer->read(_inputStream, *object) ? CPD_OK : CPD_ERROR);
         }
         else
         {
             OSG_NOTICE<<"ClassInterface::copyPropertyDataToObject() Types are not compatible, valueType = "<<valueType<<" ["<<getTypeName(valueType)<<"] , destinationType="<<destinationType<<" ["<<getTypeName(destinationType)<<"]"<<std::endl;
-            return false;
+            return CPD_FATAL;
         }
     }
     else
     {
         OSG_INFO<<"ClassInterface::copyPropertyDataToObject() no serializer available."<<std::endl;
-        return false;
+        return CPD_ERROR;
     }
 }
 
-bool ClassInterface::copyPropertyObjectFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int /*valueSize*/, osgDB::BaseSerializer::Type valueType)
+ClassInterface::CPDResult ClassInterface::copyPropertyObjectFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int /*valueSize*/, osgDB::BaseSerializer::Type valueType)
 {
     osgDB::BaseSerializer::Type sourceType;
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, sourceType);
@@ -414,22 +414,22 @@ bool ClassInterface::copyPropertyObjectFromObject(const osg::Object* object, con
     {
         if (areTypesCompatible(sourceType, valueType))
         {
-            return serializer->get(*object, valuePtr);
+            return (serializer->get(*object, valuePtr) ? CPD_OK : CPD_ERROR);
         }
         else
         {
             OSG_NOTICE<<"ClassInterface::copyPropertyObjectFromObject() Types are not compatible, valueType = "<<valueType<<" ["<<getTypeName(valueType)<<"] , sourceType="<<sourceType<<" ["<<getTypeName(sourceType)<<"]"<<std::endl;
-            return false;
+            return CPD_FATAL;
         }
     }
     else
     {
         OSG_INFO<<"ClassInterface::copyPropertyObjectFromObject() no serializer available."<<std::endl;
-        return false;
+        return CPD_ERROR;
     }
 }
 
-bool ClassInterface::copyPropertyObjectToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int /*valueSize*/, osgDB::BaseSerializer::Type valueType)
+ClassInterface::CPDResult ClassInterface::copyPropertyObjectToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int /*valueSize*/, osgDB::BaseSerializer::Type valueType)
 {
     osgDB::BaseSerializer::Type destinationType;
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, destinationType);
@@ -437,18 +437,18 @@ bool ClassInterface::copyPropertyObjectToObject(osg::Object* object, const std::
     {
         if (areTypesCompatible(valueType, destinationType))
         {
-            return serializer->set(*object, const_cast<void*>(valuePtr));
+            return (serializer->set(*object, const_cast<void*>(valuePtr)) ? CPD_OK : CPD_ERROR);
         }
         else
         {
             OSG_NOTICE<<"ClassInterface::copyPropertyObjectToObject() Types are not compatible, valueType = "<<valueType<<", destinationType="<<destinationType<<std::endl;
-            return false;
+            return CPD_FATAL;
         }
     }
     else
     {
         OSG_INFO<<"ClassInterface::copyPropertyObjectToObject() no serializer available."<<std::endl;
-        return false;
+        return CPD_ERROR;
     }
 }
 

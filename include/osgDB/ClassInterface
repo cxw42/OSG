@@ -195,13 +195,20 @@ public:
 
 protected:
 
-    bool copyPropertyDataFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
+    /// Possible results of copyPropertyDataFromObject() and related functions
+    enum CPDResult {
+        CPD_OK,     ///< Success
+        CPD_ERROR,  ///< Failure, but it's OK to retry from UserDataContainer
+        CPD_FATAL,  ///< Failure, and don't retry from UserDataContainer
+    };
 
-    bool copyPropertyDataToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
+    CPDResult copyPropertyDataFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
 
-    bool copyPropertyObjectFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
+    CPDResult copyPropertyDataToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
 
-    bool copyPropertyObjectToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
+    CPDResult copyPropertyObjectFromObject(const osg::Object* object, const std::string& propertyName, void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
+
+    CPDResult copyPropertyObjectToObject(osg::Object* object, const std::string& propertyName, const void* valuePtr, unsigned int valueSize, osgDB::BaseSerializer::Type valueType);
 
 
 
@@ -225,30 +232,46 @@ protected:
 template<typename T>
 bool ClassInterface::getProperty(const osg::Object* object, const std::string& propertyName, T& value)
 {
-    if (copyPropertyDataFromObject(object, propertyName, &value, sizeof(T), getTypeEnum<T>())) return true;
-    else return object->getUserValue(propertyName, value); // fallback to check user data for property
+    CPDResult result = copyPropertyDataFromObject(object, propertyName, &value, sizeof(T), getTypeEnum<T>());
+    if(result == CPD_OK) {
+        return true;
+    } else if(result == CPD_FATAL) {
+        return false;
+    } else {
+        // fallback to check user data for property
+        return object->getUserValue(propertyName, value);
+    }
 }
 
 template<typename T>
 bool ClassInterface::setProperty(osg::Object* object, const std::string& propertyName, const T& value)
 {
-    if (copyPropertyDataToObject(object, propertyName, &value, sizeof(T), getTypeEnum<T>())) return true;
-    else
-    {
+    CPDResult result = copyPropertyDataToObject(object, propertyName, &value, sizeof(T), getTypeEnum<T>());
+    if(result == CPD_OK) {
+        return true;
+    } else if(result == CPD_FATAL) {
+        return false;
+    } else {
         // fallback to using user data to store property data
         object->setUserValue(propertyName, value);
-        return false;
+        return false;   // TODO Why is this false?  getProperty() returns true
+                        // if the value was read, so why is this different?
     }
 }
 
 typedef osg::Object* ObjectPtr;
 
+/// Specialization of getProperty() for properties that have an osg::Object
+/// as the value.
 template<>
 inline bool ClassInterface::getProperty(const osg::Object* object, const std::string& propertyName, ObjectPtr& value)
 {
-    if (copyPropertyObjectFromObject(object, propertyName, &value, sizeof(ObjectPtr), getTypeEnum<ObjectPtr>())) return true;
-    else
-    {
+    CPDResult result = copyPropertyObjectFromObject(object, propertyName, &value, sizeof(ObjectPtr), getTypeEnum<ObjectPtr>());
+    if(result == CPD_OK) {
+        return true;
+    } else if(result == CPD_FATAL) {
+        return false;
+    } else {
         OSG_INFO<<"ClassInterface::getProperty("<<propertyName<<", Checking UserDataContainer for object ptr"<<std::endl;
         const osg::UserDataContainer* udc = object->getUserDataContainer();
         if (udc)
@@ -265,14 +288,19 @@ inline bool ClassInterface::getProperty(const osg::Object* object, const std::st
     }
 }
 
+/// Specialization of setProperty() for properties that have an osg::Object
+/// as the value.
 template<>
 inline bool ClassInterface::setProperty(osg::Object* object, const std::string& propertyName, const ObjectPtr& value)
 {
     osgDB::BaseSerializer::Type type = dynamic_cast<osg::Image*>(value) ? osgDB::BaseSerializer::RW_IMAGE : getTypeEnum<ObjectPtr>();
     // osgDB::BaseSerializer::Type type = getTypeEnum<ObjectPtr>();
-    if (copyPropertyObjectToObject(object, propertyName, &value, sizeof(ObjectPtr), type)) return true;
-    else
-    {
+    CPDResult result = copyPropertyObjectToObject(object, propertyName, &value, sizeof(ObjectPtr), type);
+    if(result == CPD_OK) {
+        return true;
+    } else if(result == CPD_FATAL) {
+        return false;
+    } else {
         // fallback to using user data to store property data
         osg::UserDataContainer* udc = object->getOrCreateUserDataContainer();
         unsigned int objectIndex = udc->getUserObjectIndex(propertyName);
