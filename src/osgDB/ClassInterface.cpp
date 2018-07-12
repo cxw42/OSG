@@ -322,6 +322,14 @@ bool ClassInterface::copyPropertyDataFromObject(const osg::Object* object, const
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, sourceType);
     if (!serializer) return false;
 
+    int usage(serializer->getUsage());
+    if (!( (usage & osgDB::BaseSerializer::READ_WRITE_PROPERTY) ||
+            (usage & osgDB::BaseSerializer::GET_PROPERTY) ))
+    {
+        OSG_NOTICE<<"ClassInterface::copyPropertyDataFromObject() cannot read unreadable property "<<propertyName<<std::endl;
+        return false;
+    }
+
     if (!areTypesCompatible(sourceType, valueType))
     {
         OSG_NOTICE<<"ClassInterface::copyPropertyDataFromObject() Types are not compatible, valueType = "<<valueType<<", sourceType="<<sourceType<<std::endl;
@@ -373,6 +381,14 @@ bool ClassInterface::copyPropertyDataToObject(osg::Object* object, const std::st
     osgDB::BaseSerializer* serializer = getSerializer(object, propertyName, destinationType);
     if (serializer)
     {
+        int usage(serializer->getUsage());
+        if (!( (usage & osgDB::BaseSerializer::READ_WRITE_PROPERTY) ||
+                (usage & osgDB::BaseSerializer::SET_PROPERTY) ))
+        {
+            OSG_NOTICE<<"ClassInterface::copyPropertyDataToObject() cannot write unwriteable property "<<propertyName<<std::endl;
+            return false;
+        }
+
         if (areTypesCompatible(valueType, destinationType))
         {
             return serializer->read(_inputStream, *object);
