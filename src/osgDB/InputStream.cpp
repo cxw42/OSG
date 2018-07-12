@@ -915,8 +915,8 @@ osg::ref_ptr<osg::Object> InputStream::readObjectFields( const std::string& clas
         const ObjectWrapper::RevisionAssociateList& associates = wrapper->getAssociates();
         for ( ObjectWrapper::RevisionAssociateList::const_iterator itr=associates.begin(); itr!=associates.end(); ++itr )
         {
-            if ( itr->_firstVersion <= inputVersion &&
-                    inputVersion <= itr->_lastVersion)
+            if ( itr->_firstVersion <= inputVersion &&  // Version check on the
+                    inputVersion <= itr->_lastVersion)  // associate in question
             {
                 ObjectWrapper* assocWrapper = Registry::instance()->getObjectWrapperManager()->findWrapper(itr->_name);
                 if ( !assocWrapper )

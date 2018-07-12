@@ -650,8 +650,8 @@ void OutputStream::writeObjectFields( const osg::Object* obj, const std::string&
     const ObjectWrapper::RevisionAssociateList& associates = wrapper->getAssociates();
     for ( ObjectWrapper::RevisionAssociateList::const_iterator itr=associates.begin(); itr!=associates.end(); ++itr )
     {
-        if ( itr->_firstVersion <= outputVersion &&
-                outputVersion <= itr->_lastVersion)
+        if ( itr->_firstVersion <= outputVersion &&     // Version check on the
+                outputVersion <= itr->_lastVersion)     // associate in question
         {
             const std::string& assocName = itr->_name;
             ObjectWrapper* assocWrapper = Registry::instance()->getObjectWrapperManager()->findWrapper(assocName);

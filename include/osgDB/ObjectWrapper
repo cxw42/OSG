@@ -23,6 +23,8 @@
 namespace osgDB
 {
 
+/// Interface for an instance that can perform an action with respect to
+/// an osg::Object.
 struct MethodObject : public osg::Referenced
 {
     typedef std::vector< osg::ref_ptr<osg::Object> > Parameters;
@@ -31,6 +33,7 @@ struct MethodObject : public osg::Referenced
     /// \pre The caller must make sure that #outputParameters is empty
     ///      when this function is called, since code herein assumes that
     ///      and uses push_back.
+    /// \return {bool} true on success; false on failure
     virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const = 0;
 
     virtual ~MethodObject() {}
@@ -63,6 +66,9 @@ struct OSGDB_EXPORT ObjectWrapperAssociate
     std::string _name;
 };
 
+/// Makes a C++ class derived from osg::Object accessible to serializers
+/// and scripting languages.  Can create instances, get/set properties
+/// on those instances, and invoke methods on those instances.
 class OSGDB_EXPORT ObjectWrapper : public osg::Referenced
 {
 public:
@@ -80,10 +86,14 @@ public:
     void setUpdatedVersion( int ver ) { _version = ver; }
     int getUpdatedVersion() const { return _version; }
 
+    /// Create a new instance of the class wrapped by this particular
+    /// ObjectWrapper instance.
     osg::Object* createInstance() const { return  _createInstanceFunc(); }
     const std::string& getDomain() const { return _domain; }
     const std::string& getName() const { return _name; }
 
+    /// A list of classes whose fields the wrapped class shares.  This is
+    /// usually the list of parent classes up to osg::Object.
     const RevisionAssociateList& getAssociates() const { return _associates; }
 
     SerializerList& getSerializerList() { return _serializers; }
@@ -104,7 +114,12 @@ public:
 
     void addFinishedObjectReadCallback ( FinishedObjectReadCallback* forc) { _finishedObjectReadCallbacks.push_back(forc); }
 
+    /// Read from an input stream an instance of the class wrapped by
+    /// this ObjectWrapper instance.  Does not read fields of associates.
     bool read( InputStream&, osg::Object& );
+
+    /// Write to an input stream an instance of the class wrapped by
+    /// this ObjectWrapper instance.  Does not write fields of associates.
     bool write( OutputStream&, const osg::Object& );
 
     bool readSchema( const StringList& properties, const TypeList& types );
@@ -158,6 +173,9 @@ struct UpdateWrapperVersionProxy
 
 class Registry;
 
+/// Store mappings of string class names (e.g., osg::Node) to
+/// ObjectWrapper instances that can be used to manipulate instances of
+/// the named classes.
 class OSGDB_EXPORT ObjectWrapperManager : public osg::Referenced
 {
 public:
