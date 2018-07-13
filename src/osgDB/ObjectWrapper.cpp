@@ -734,6 +734,33 @@ void ObjectWrapperManager::removeWrapper( ObjectWrapper* wrapper )
     if ( itr!=_wrappers.end() ) _wrappers.erase( itr );
 }
 
+/// Note: Keep in sync with ObjectWrapperManager::findWrapper
+bool ObjectWrapperManager::loadWrapperLibraries( const std::string& name )
+{
+    bool retval(false);
+    std::string libName(name);
+
+    std::string::size_type posDoubleColon = name.rfind("::");
+    if ( posDoubleColon!=std::string::npos )
+        libName = std::string( name, 0, posDoubleColon );
+
+    osgDB::Registry::LoadStatus loadstatus;
+    std::string nodeKitLib = osgDB::Registry::instance()->createLibraryNameForNodeKit(libName);
+    loadstatus = osgDB::Registry::instance()->loadLibrary(nodeKitLib);
+    retval = retval || (loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED);
+
+    std::string pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(std::string("serializers_")+libName);
+    loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
+    retval = retval || (loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED);
+
+    pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(libName);
+    loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
+    retval = retval || (loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED);
+
+    return retval;
+}
+
+/// Note: Keep in sync with ObjectWrapperManager::loadWrapperLibraries
 ObjectWrapper* ObjectWrapperManager::findWrapper( const std::string& name )
 {
     OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_wrapperMutex);
@@ -748,16 +775,20 @@ ObjectWrapper* ObjectWrapperManager::findWrapper( const std::string& name )
         std::string libName = std::string( name, 0, posDoubleColon );
 
         ObjectWrapper* found=0;
+        osgDB::Registry::LoadStatus loadstatus;
         std::string nodeKitLib = osgDB::Registry::instance()->createLibraryNameForNodeKit(libName);
-        if ( osgDB::Registry::instance()->loadLibrary(nodeKitLib)==osgDB::Registry::LOADED )
-            found= findWrapper(name);
+        loadstatus = osgDB::Registry::instance()->loadLibrary(nodeKitLib);
+        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
+            found = findWrapper(name);
 
         std::string pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(std::string("serializers_")+libName);
-        if ( osgDB::Registry::instance()->loadLibrary(pluginLib)==osgDB::Registry::LOADED )
-            found= findWrapper(name);
+        loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
+        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
+            found = findWrapper(name);
 
         pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(libName);
-        if ( osgDB::Registry::instance()->loadLibrary(pluginLib)==osgDB::Registry::LOADED )
+        loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
+        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
             found= findWrapper(name);
 
         if (found) found->setupAssociatesRevisionsInheritanceIfRequired();

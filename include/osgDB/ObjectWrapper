@@ -185,6 +185,10 @@ public:
     void removeWrapper( ObjectWrapper* wrapper );
     ObjectWrapper* findWrapper( const std::string& name );
 
+    /// Load the dynamic library/libraries for a wrapper.
+    /// \return true if at least one library was loaded; false otherwise.
+    bool loadWrapperLibraries( const std::string& name );
+
     typedef std::map< std::string, osg::ref_ptr<ObjectWrapper> > WrapperMap;
     WrapperMap& getWrapperMap() { return _wrappers; }
     const WrapperMap& getWrapperMap() const { return _wrappers; }
