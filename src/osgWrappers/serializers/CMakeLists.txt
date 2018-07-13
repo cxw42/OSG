@@ -59,3 +59,7 @@ ADD_SUBDIRECTORY(osgText)
 ADD_SUBDIRECTORY(osgVolume)
 ADD_SUBDIRECTORY(osgViewer)
 ADD_SUBDIRECTORY(osgUI)
+
+################################################################################
+# Additional support for scripting
+ADD_SUBDIRECTORY(example_scripting)
