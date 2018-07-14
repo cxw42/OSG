@@ -176,7 +176,7 @@ public:
         GET_PROPERTY = 2,
 
         /// Property can be written, but should NOT be serialized
-        SET_PROPERTY = 4
+        SET_PROPERTY = 4,
 
         /// Property can be read and written, but should NOT be serialized
         GET_SET_PROPERTY = GET_PROPERTY | SET_PROPERTY
@@ -214,7 +214,7 @@ public:
     virtual IntLookup* getIntLookup() { return 0; }
 
     /// Get the osgDB::BaseSerializer::Usage for this property
-    int getUsage() const { return _usage; }
+    virtual int getUsage() const { return _usage; }
 
     /// Set the osgDB::BaseSerializer::Usage for this property directly
     void setUsage(int usage) { _usage = usage; }
