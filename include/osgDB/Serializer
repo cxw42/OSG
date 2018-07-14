@@ -36,6 +36,7 @@ extern OSGDB_EXPORT void split( const std::string& src, StringList& list, char s
     #define OBJECT_CAST static_cast
 #endif
 
+/// A bidirectional map between strings and IntLookup::Value instances (ints)
 class IntLookup
 {
 public:
@@ -46,6 +47,7 @@ public:
     IntLookup() {}
     unsigned int size() const { return static_cast<unsigned int>(_stringToValue.size()); }
 
+    /// Add a mapping between str and value
     void add( const char* str, Value value )
     {
         if ( _valueToString.find(value)!=_valueToString.end() )
@@ -58,6 +60,7 @@ public:
         _stringToValue[str] = value;
     }
 
+    /// Add a mapping between newStr and value, and an alias from str to value
     void add2(const char* str, const char* newStr, Value value) {
         if (_valueToString.find(value) != _valueToString.end())
         {
@@ -70,6 +73,8 @@ public:
         _stringToValue[str] = value;
     }
 
+    /// Map from \p str to the corresponding Value.  If \p str is not in the
+    /// map, adds it.
     Value getValue( const char* str )
     {
         StringToValue::iterator itr = _stringToValue.find(str);
@@ -84,6 +89,8 @@ public:
         return itr->second;
     }
 
+    /// Map from \p value to the corresponding std::string.  If \p value
+    /// is not in the map, adds it.
     const std::string& getString( Value value )
     {
         ValueToString::iterator itr = _valueToString.find(value);
@@ -105,8 +112,8 @@ public:
     const ValueToString& getValueToString() const { return _valueToString; }
 
 protected:
-    StringToValue _stringToValue;
-    ValueToString _valueToString;
+    StringToValue _stringToValue;   ///< Map from strings to values
+    ValueToString _valueToString;   ///< Map from values to strings
 };
 
 class UserLookupTableProxy
@@ -137,10 +144,13 @@ public:
         if (os.isBinary()) os << value; \
         else os << (s_user_lookup_table_##NAME)._lookup.getString(value); } \
 
+/// Serializer to get or set a single property (abstract base class)
 class BaseSerializer : public osg::Referenced
 {
     friend class ObjectWrapper;
 public:
+
+    /// The data type of a property
     enum Type
     {
         RW_UNDEFINED = 0, RW_USER, RW_OBJECT, RW_IMAGE, RW_LIST,
@@ -159,34 +169,60 @@ public:
     /// shorthand for int values.
     enum Usage
     {
-        /// Property can be read and written, and should be serialized.
+        /// Property can be read and written, and should be serialized
         READ_WRITE_PROPERTY = 1,
 
-        /// Property can be read, but should NOT be serialized.
+        /// Property can be read, but should NOT be serialized
         GET_PROPERTY = 2,
 
-        /// Property can be written, but should NOT be serialized.
-        SET_PROPERTY = 4,
+        /// Property can be written, but should NOT be serialized
+        SET_PROPERTY = 4
 
-        /// Property can be read and written, but should NOT be serialized.
+        /// Property can be read and written, but should NOT be serialized
         GET_SET_PROPERTY = GET_PROPERTY | SET_PROPERTY
     };
 
 
     BaseSerializer(int usage) : _firstVersion(0), _lastVersion(INT_MAX), _usage(usage) {}
 
-    virtual bool set(osg::Object& /*object*/, void* /*value*/) { return false; }
-    virtual bool get(const osg::Object& /*object*/, void* /*value*/) { return false; }
+    /// Set an osg::Object (or subclass) property on an osg::Object
+    /// (or subclass) instance.
+    /// @param object   The osg::Object instance on which the property
+    ///                 should be set.
+    /// @param value    An osg::Object** where the pointer to the new
+    ///                 property value is stored.
+    virtual bool set(osg::Object& object, void* value) { (void)object; (void)value; return false; }
 
+    /// Get an osg::Object (or subclass) property from an osg::Object
+    /// (or subclass) instance.
+    /// @param object   The osg::Object instance from which the property
+    ///                 should be retrieved.
+    /// @param value    An osg::Object** where the pointer to the
+    ///                 property value should be stored.
+    virtual bool get(const osg::Object& object, void* value) { (void)object; (void)value; return false; }
+
+    /// Read the value of the property from an osgDB::InputStream
     virtual bool read( InputStream&, osg::Object& ) = 0;
+
+    /// Write the value of the property to an osgDB::OutputStream
     virtual bool write( OutputStream&, const osg::Object& ) = 0;
+
+    /// Get the name of this property
     virtual const std::string& getName() const = 0;
 
+    /// Get a lookup table (if any) for this property
     virtual IntLookup* getIntLookup() { return 0; }
 
-    void setUsage(int usage) { _usage = usage; }
+    /// Get the osgDB::BaseSerializer::Usage for this property
     int getUsage() const { return _usage; }
 
+    /// Set the osgDB::BaseSerializer::Usage for this property directly
+    void setUsage(int usage) { _usage = usage; }
+
+    /// Set the osgDB::BaseSerializer::Usage for this property based on
+    /// whether it has a getter and setter.  If it has both, the property
+    /// is marked as Usage::READ_WRITE_PROPERTY, _not_ as
+    /// Usage::GET_SET_PROPERTY.
     void setUsage(bool hasGetter, bool hasSetter)
     {
         setUsage( ((hasGetter && hasSetter) ? BaseSerializer::READ_WRITE_PROPERTY : 0) |
@@ -200,11 +236,13 @@ public:
     bool supportsSet() const { return (_usage & SET_PROPERTY)!=0; }
 
 protected:
-    int _firstVersion;  // Library version when the serializer is first introduced
-    int _lastVersion;   // Library version when the serializer is last required.
-    int _usage;         // How the Serializer can be used.
+    int _firstVersion;  ///< Library version when the serializer is first introduced
+    int _lastVersion;   ///< Library version when the serializer is last required
+    int _usage;         ///< How the Serializer can be used.
 };
 
+/// Serializer for osgDB::BaseSerializer::Type::RW_USER properties
+/// @tparam C The type of object to which the serializer applies
 template<typename C>
 class UserSerializer : public BaseSerializer
 {
@@ -260,6 +298,8 @@ public:
     Writer _writer;
 };
 
+/// Serialize a property to and from a specific C++ type.
+/// @tparam P   The C++ type
 template<typename P>
 class TemplateSerializer : public BaseSerializer
 {
@@ -277,6 +317,13 @@ protected:
     P _defaultValue;
 };
 
+/// Serialize a pass-by-value property of a class using getters and setters
+/// of that class.  This is one of the most frequently used serializers.
+/// The getter should be <tt>P getter() const</tt> and the setter should
+/// be <tt>void setter(P)</tt>.
+///
+/// @tparam C   The class whose property is being serialized
+/// @tparam P   The C++ type of the property being serialized
 template<typename C, typename P>
 class PropByValSerializer : public TemplateSerializer<P>
 {
@@ -336,6 +383,13 @@ protected:
     bool _useHex;
 };
 
+/// Serialize a pass-by-reference property of a class using getters and setters
+/// of that class.  This is one of the most frequently used serializers.
+/// The getter should be <tt>const P& getter() const</tt> and the setter should
+/// be <tt>void setter(const P&)</tt>.
+///
+/// @tparam C   The class whose property is being serialized
+/// @tparam P   The C++ type of the property being serialized
 template<typename C, typename P>
 class PropByRefSerializer : public TemplateSerializer<P>
 {
@@ -559,6 +613,12 @@ public:
     Setter _setter;
 };
 
+/// Serialize an osg::Object of a class using getters and setters
+/// of that class.  The getter should be <tt>const P* getter() const</tt>
+/// and the setter should be <tt>void setter(const P*)</tt>.
+///
+/// @tparam C   The class whose property is being serialized
+/// @tparam P   The C++ subclass of osg::Object being serialized
 template<typename C, typename P>
 class ObjectSerializer : public TemplateSerializer<P*>
 {

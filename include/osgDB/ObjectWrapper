@@ -30,10 +30,10 @@ struct MethodObject : public osg::Referenced
     typedef std::vector< osg::ref_ptr<osg::Object> > Parameters;
 
     /// Run the method represented by this object.
-    /// \pre The caller must make sure that #outputParameters is empty
+    /// \pre The caller must make sure that \p outputParameters is empty
     ///      when this function is called, since code herein assumes that
     ///      and uses push_back.
-    /// \return {bool} true on success; false on failure
+    /// \return true on success; false on failure
     virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const = 0;
 
     virtual ~MethodObject() {}
