@@ -741,6 +741,28 @@ struct PluginFunctionProxy
     extern "C" void osgdb_##ext(void) {} \
     static osgDB::RegisterImageProcessorProxy<classname> g_proxy_##classname;
 
+/// Begin a block extending the wrappers for an already-registered class.
+/// Uses osgDB::ObjectWrapperManager::loadWrapperLibraries() so that
+/// #REGISTER_OBJECT_WRAPPER() or a related macro will already have taken
+/// effect by the time the code of the block runs.  End the block with
+/// #END_EXTEND_OBJECT_WRAPPER().
+///
+/// @param NAME             A unique name for this extension.
+/// @param CLASS            The fully-qualified name of the wrapped class.
+#define BEGIN_EXTEND_OBJECT_WRAPPER(NAME, CLASS) \
+    extern void extend_wrapper_propfunc_##NAME(osgDB::ObjectWrapper* wrapper); \
+    static osgDB::PluginFunctionProxy extend_wrapper_proxy_##NAME(extend_wrapper_propfunc_##NME); \
+    typedef CLASS MyClass; \
+    void extend_wrapper_propfunc_##NAME(osgDB::ObjectWrapper* wrapper) { \
+        osgDB::Registry::instance()->getObjectWrapperManager()->loadWrapperLibraries( CLASS );
+
+/// End a block that began with #BEGIN_EXTEND_OBJECT_WRAPPER().
+#define END_EXTEND_OBJECT_WRAPPER() \
+        return; \
+    }
+// Note: the "return;" is so that Doxygen will pick up the definition as a
+// block rather than a single symbol.
+
 }
 
 #endif

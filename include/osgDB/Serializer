@@ -187,25 +187,34 @@ public:
 
     /// Set an osg::Object (or subclass) property on an osg::Object
     /// (or subclass) instance.
-    /// @param object   The osg::Object instance on which the property
-    ///                 should be set.
-    /// @param value    An osg::Object** where the pointer to the new
-    ///                 property value is stored.
+    /// @param object   The osg::Object (or subclass) instance on which the
+    ///                 property will be set.
+    /// @param value    An osg::Object** where the pointer to the new value
+    ///                 for the property is stored.
+    /// @return True on success; false on failure.
     virtual bool set(osg::Object& object, void* value) { (void)object; (void)value; return false; }
 
     /// Get an osg::Object (or subclass) property from an osg::Object
     /// (or subclass) instance.
-    /// @param object   The osg::Object instance from which the property
-    ///                 should be retrieved.
-    /// @param value    An osg::Object** where the pointer to the
-    ///                 property value should be stored.
+    /// @param object   The osg::Object (or subclass) instance from which the
+    ///                 property should be retrieved.
+    /// @param value    An osg::Object** in which to store the pointer to the
+    ///                 retrieved property value.
+    /// @return True on success; false on failure.
     virtual bool get(const osg::Object& object, void* value) { (void)object; (void)value; return false; }
 
-    /// Read the value of the property from an osgDB::InputStream
-    virtual bool read( InputStream&, osg::Object& ) = 0;
+    /// Set the value of the property from an osgDB::InputStream.
+    /// @param is       The input stream holding the new value
+    /// @param obj      The osg::Object (or subclass) instance into which the
+    ///                 property value should be stored
+    virtual bool read( InputStream& is, osg::Object& obj ) = 0;
 
-    /// Write the value of the property to an osgDB::OutputStream
-    virtual bool write( OutputStream&, const osg::Object& ) = 0;
+    /// Write the value of the property to an osgDB::OutputStream.
+    /// @param os       The output stream to which the property's value should
+    ///                 be written.
+    /// @param obj      The osg::Object (or subclass) instance from which the
+    ///                 property's value should be retrieved.
+    virtual bool write( OutputStream& os, const osg::Object& obj ) = 0;
 
     /// Get the name of this property
     virtual const std::string& getName() const = 0;
@@ -1608,7 +1617,131 @@ protected:
     osgDB::IntLookup _lookup;
 };
 
-// ADDING MANIPULATORS
+/// Serialize a "virtual" property of a class, i.e., a property
+/// not represented by specific getters and setters in that class.
+/// To implement a virtual property, subclass this and implement
+/// readImplementation() and writeImplementation().
+///
+/// \remark Virtual properties should not be serialized to files.  Therefore,
+/// this serializer only supports binary streams (as used in
+/// osgDB::ClassInterface), and does not support a Usage of
+/// osgDB::BaseSerializer::READ_WRITE_PROPERTY.
+///
+/// @tparam C   The class whose property is being serialized
+template<class C>
+class VirtualPropertySerializer : public BaseSerializer
+{
+public:
+    typedef BaseSerializer ParentType;
+
+    /// Construct a VirtualPropertySerializer with the given name, usage, and
+    /// type.  Must be callable with only the name, since that is how
+    /// #ADD_VIRTUAL_PROPERTY_SERIALIZER() calls it.
+    ///
+    /// @param name     The name of the property
+    /// @param usage    An osgDB::BaseSerializer::Usage value or combination
+    /// @param type     The serializer type of the virtual property
+    VirtualPropertySerializer( const char* name, int usage = 0,
+            BaseSerializer::Type type = BaseSerializer::RW_UNDEFINED )
+        : ParentType(usage), _name(name), _type(type)
+    { }
+
+    virtual ~VirtualPropertySerializer() {}
+
+    virtual BaseSerializer::Type getType() const { return _type; }
+
+    /// Get the osgDB::BaseSerializer::Usage for this property, but do not
+    /// permit it to be READ_WRITE_PROPERTY.
+    virtual int getUsage() const {
+        if ( (_usage & BaseSerializer::READ_WRITE_PROPERTY) != 0 ) {
+            OSG_WARN << "osgDB::VirtualProperty: Virtual property " << _name
+                << " cannot be READ_WRITE - forcing to GET_SET" << std::endl;
+            return BaseSerializer::GET_SET_PROPERTY;
+        }
+        return _usage;
+    }
+
+    /// Set the virtual property on \p obj from data in \p is
+    virtual bool read( InputStream& is, osg::Object& obj )
+    {
+        if ( is.isBinary() )
+        {
+            C *ptr = dynamic_cast<C*>(&obj);
+            if ( ptr != 0 )
+            {
+                return setPropertyFrom(is, *ptr);
+            }
+            else
+            {
+                OSG_WARN << "osgDB::VirtualProperty::read: Attempt to set "
+                    << "virtual property " << _name << ", which doesn't exist on "
+                    << obj.getCompoundClassName() << std::endl;
+                return false;
+            }
+        }
+        else
+        {
+            OSG_WARN << "osgDB::VirtualProperty::read: Virtual property " << _name
+                << " cannot be read from non-binary stream" << std::endl;
+            return false;
+        }
+    }
+
+    /// Store into \p os the value of the virtual property on \p obj
+    virtual bool write( OutputStream& os, const osg::Object& obj )
+    {
+        if ( os.isBinary() )
+        {
+            const C *ptr = dynamic_cast<const C*>(&obj);
+            if ( ptr != 0 )
+            {
+                return getPropertyInto(os, obj);
+            }
+            else
+            {
+                OSG_WARN << "osgDB::VirtualProperty::write: Attempt to get "
+                    << "virtual property " << _name << ", which doesn't exist on "
+                    << obj.getCompoundClassName() << std::endl;
+                return false;
+            }
+        }
+        else
+        {
+            OSG_WARN << "osgDB::VirtualProperty::write: Virtual property " << _name
+                << " cannot be written to non-binary stream" << std::endl;
+            return false;
+        }
+    }
+
+protected:
+
+    /// Set the virtual property, whatever that means, from an
+    /// osgDB::InputStream.  To be overridden in child classes.
+    ///
+    /// @param is       An input stream holding data of interest
+    /// @param object   The osg::Object (or subclass) instance that should be
+    ///                 updated based on information in \p is
+    virtual bool setPropertyFrom( InputStream& is, C& object ) {
+        (void)is; (void)object; return false;
+    }
+
+    /// Write to an osgDB::OutputStream data holding the value of a virtual
+    /// property, whatever that means.  To be overridden in child classes.
+    ///
+    /// @param os       The output stream to which the data should be written.
+    /// @param object   The osg::Object (or subclass) instance from which
+    ///                 relevant data should be retrieved.
+    virtual bool getPropertyInto( OutputStream& os, const C& object ) {
+        (void)os; (void)object; return false;
+    }
+
+    std::string _name;
+    BaseSerializer::Type _type;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// ADDING MANIPULATORS - macros for use in src/osgWrappers/serializers files
+
 #define ADD_SERIALIZER(S) \
     wrapper->addSerializer( (S) )
 
@@ -1954,6 +2087,15 @@ protected:
 #define END_BITFLAGS_SERIALIZER() \
     wrapper->addSerializer(serializer.get(), osgDB::BaseSerializer::RW_INT); }
 
+/// Add a virtual-property serializer.
+#define ADD_VIRTUAL_PROPERTY_SERIALIZER( SERIALIZERCLASS ) \
+    do { \
+        osg::ref_ptr< SERIALIZERCLASS > serializer( \
+                new SERIALIZERCLASS , wrapper->getName() \
+        ); \
+        wrapper->addSerializer(serializer.get(), serializer->getType()); \
+    } while(0)
+
 // VERSION CONTROL OPERATORS
 #define UPDATE_TO_VERSION(VER) \
     wrapper->setUpdatedVersion( (VER) );
@@ -1974,6 +2116,7 @@ protected:
     wrapper->addSerializer( new osgDB::MapSerializer< MyClass, TYPE >( \
         #PROP, &MyClass::get##PROP, &MyClass::get##PROP, &MyClass::set##PROP, KEYTYPE, ELEMENTTYPE), osgDB::BaseSerializer::RW_MAP )
 
+// METHOD OBJECTS
 #define ADD_METHOD_OBJECT( METHODNAME, METHODOBJECTCLASS ) wrapper->addMethodObject(METHODNAME, new METHODOBJECTCLASS());
 
 #define ADD_METHOD(METHODNAME) \

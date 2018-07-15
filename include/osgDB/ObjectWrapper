@@ -30,10 +30,10 @@ struct MethodObject : public osg::Referenced
     typedef std::vector< osg::ref_ptr<osg::Object> > Parameters;
 
     /// Run the method represented by this object.
-    /// \pre The caller must make sure that \p outputParameters is empty
+    /// @pre The caller must make sure that \p outputParameters is empty
     ///      when this function is called, since code herein assumes that
     ///      and uses push_back.
-    /// \return true on success; false on failure
+    /// @return true on success; false on failure
     virtual bool run(osg::Object* objectPtr, osg::Parameters& inputParameters, osg::Parameters& outputParameters) const = 0;
 
     virtual ~MethodObject() {}
@@ -186,7 +186,11 @@ public:
     ObjectWrapper* findWrapper( const std::string& name );
 
     /// Load the dynamic library/libraries for a wrapper.
-    /// \return true if at least one library was loaded; false otherwise.
+    /// @param name The full name of the class to find wrappers for, in the
+    ///             same form as for findWrapper().  Alternatively, this
+    ///             can be just the library name (e.g., <tt>"osgText"</tt>).
+    ///
+    /// @return true if at least one library was loaded; false otherwise.
     bool loadWrapperLibraries( const std::string& name );
 
     typedef std::map< std::string, osg::ref_ptr<ObjectWrapper> > WrapperMap;
@@ -231,7 +235,7 @@ protected:
     IntLookupMap _globalMap;
 };
 
-
+/// Register an object wrapper at load time
 class OSGDB_EXPORT RegisterWrapperProxy
 {
 public:
@@ -260,6 +264,15 @@ protected:
     osg::ref_ptr<ObjectWrapper> _wrapper;
 };
 
+/// Begin the serializer-registration block for class \p CLASS.
+/// @param NAME             A unique name for this wrapper.
+/// @param CREATEINSTANCE   An expression that will return a new instance
+///                         of \p CLASS.
+/// @param CLASS            The fully-qualified name of the wrapped class.
+/// @param ASSOCIATES       A string listing the space-separated associates
+///                         of \p CLASS, if any, starting with \c osg::Object
+///                         and extending down through the inheritance
+///                         chain to \p CLASS.
 #define REGISTER_OBJECT_WRAPPER(NAME, CREATEINSTANCE, CLASS, ASSOCIATES) \
     extern "C" void wrapper_serializer_##NAME(void) {} \
     extern void wrapper_propfunc_##NAME(osgDB::ObjectWrapper*); \
@@ -296,6 +309,7 @@ protected:
     typedef CLASS MyClass; \
     void wrapper_propfunc_##NAME(const char* domain, osgDB::ObjectWrapper* wrapper)
 
+/// Register a compressor class at load time
 class OSGDB_EXPORT RegisterCompressorProxy
 {
 public:
