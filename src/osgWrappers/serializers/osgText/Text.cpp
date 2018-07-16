@@ -95,12 +95,18 @@ REGISTER_OBJECT_WRAPPER( osgText_Text,
 
     // Replace the BackdropOffset serializer
     ADD_FLOAT_SERIALIZER(BackdropOffsetH, 0.07f);
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_FLOAT_SERIALIZER(BackdropOffsetV, 0.07f);
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
     // Replace the ColorGradientCorners serializer
     ADD_VEC4_SERIALIZER(CGTopLeft, osg::Vec4());
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_VEC4_SERIALIZER(CGBottomLeft, osg::Vec4());
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_VEC4_SERIALIZER(CGBottomRight, osg::Vec4());
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_VEC4_SERIALIZER(CGTopRight, osg::Vec4());
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
 }

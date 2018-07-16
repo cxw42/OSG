@@ -199,18 +199,24 @@ REGISTER_OBJECT_WRAPPER( osgText_TextBase,
 
     // Replace Font serializer
     ADD_STRING_SERIALIZER(FontName, "");
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
     // Replace FontSize serializer
     ADD_UINT_SERIALIZER(ResolutionW, 32);   // defaults from TextBase ctor
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_UINT_SERIALIZER(ResolutionH, 32);
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
     // Replace CharacterSize serializer
     ADD_FLOAT_SERIALIZER(CharHeight, 32.0f);
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_FLOAT_SERIALIZER(CharAspectRatio, 1.0f);
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
     // Replace Text serializer.  NOTE: this assumes that the
     // readWrappedString() and writeWrappedString() implementations being used
     // are 8-bit clean and can handle UTF-8.
     ADD_STRING_SERIALIZER(TextUTF8, "");
+    SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
 
 }
