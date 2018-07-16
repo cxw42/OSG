@@ -1617,8 +1617,8 @@ protected:
     osgDB::IntLookup _lookup;
 };
 
-/// Serialize a "virtual" property of a class, i.e., a property
-/// not represented by specific getters and setters in that class.
+/// Serialize a "virtual" property of a "target" class, i.e., a property
+/// not represented by specific getters and setters in the target class.
 /// To implement a virtual property, subclass this and implement
 /// readImplementation() and writeImplementation().
 ///
@@ -1627,12 +1627,16 @@ protected:
 /// osgDB::ClassInterface), and does not support a Usage of
 /// osgDB::BaseSerializer::READ_WRITE_PROPERTY.
 ///
-/// @tparam C   The class whose property is being serialized
+/// @tparam C   The target class, i.e., the class in which this virtual
+///             property should appear.
 template<class C>
 class VirtualPropertySerializer : public BaseSerializer
 {
 public:
     typedef BaseSerializer ParentType;
+
+    /// The class on which the property should appear
+    typedef C TargetType;
 
     /// Construct a VirtualPropertySerializer with the given name, usage, and
     /// type.  Must be callable with only the name, since that is how
@@ -1648,7 +1652,12 @@ public:
 
     virtual ~VirtualPropertySerializer() {}
 
+    /// Get the datatype of the virtual property.  This is unrelated to
+    /// whatever data the underlying class may have.
     virtual BaseSerializer::Type getType() const { return _type; }
+
+    /// Get the name of the virtual property
+    virtual const std::string& getName() const { return _name; }
 
     /// Get the osgDB::BaseSerializer::Usage for this property, but do not
     /// permit it to be READ_WRITE_PROPERTY.
@@ -1666,7 +1675,7 @@ public:
     {
         if ( is.isBinary() )
         {
-            C *ptr = dynamic_cast<C*>(&obj);
+            TargetType *ptr = dynamic_cast<TargetType*>(&obj);
             if ( ptr != 0 )
             {
                 return setPropertyFrom(is, *ptr);
@@ -1692,10 +1701,10 @@ public:
     {
         if ( os.isBinary() )
         {
-            const C *ptr = dynamic_cast<const C*>(&obj);
+            const TargetType *ptr = dynamic_cast<const TargetType*>(&obj);
             if ( ptr != 0 )
             {
-                return getPropertyInto(os, obj);
+                return getPropertyInto(os, *ptr);
             }
             else
             {
@@ -1721,7 +1730,7 @@ protected:
     /// @param is       An input stream holding data of interest
     /// @param object   The osg::Object (or subclass) instance that should be
     ///                 updated based on information in \p is
-    virtual bool setPropertyFrom( InputStream& is, C& object ) {
+    virtual bool setPropertyFrom( InputStream& is, TargetType& object ) {
         (void)is; (void)object; return false;
     }
 
@@ -1731,7 +1740,7 @@ protected:
     /// @param os       The output stream to which the data should be written.
     /// @param object   The osg::Object (or subclass) instance from which
     ///                 relevant data should be retrieved.
-    virtual bool getPropertyInto( OutputStream& os, const C& object ) {
+    virtual bool getPropertyInto( OutputStream& os, const TargetType& object ) {
         (void)os; (void)object; return false;
     }
 
@@ -2087,14 +2096,11 @@ protected:
 #define END_BITFLAGS_SERIALIZER() \
     wrapper->addSerializer(serializer.get(), osgDB::BaseSerializer::RW_INT); }
 
-/// Add a virtual-property serializer.
-#define ADD_VIRTUAL_PROPERTY_SERIALIZER( SERIALIZERCLASS ) \
-    do { \
-        osg::ref_ptr< SERIALIZERCLASS > serializer( \
-                new SERIALIZERCLASS , wrapper->getName() \
-        ); \
-        wrapper->addSerializer(serializer.get(), serializer->getType()); \
-    } while(0)
+/// Add a virtual-property serializer.  #SET_USAGE() is not used with
+/// virtual-property serializers since they define their own usages.
+#define ADD_VIRTUAL_PROPERTY_SERIALIZER( PROP, SERIALIZERCLASS ) \
+    { osg::ref_ptr< SERIALIZERCLASS > serializer( new SERIALIZERCLASS (#PROP) ); \
+        wrapper->addSerializer(serializer.get(), serializer->getType()); }
 
 // VERSION CONTROL OPERATORS
 #define UPDATE_TO_VERSION(VER) \

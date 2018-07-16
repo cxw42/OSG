@@ -706,7 +706,7 @@ class RegisterImageProcessorProxy
 
 struct PluginFunctionProxy
 {
-    PluginFunctionProxy(CPluginFunction function) { (function)(); }
+    PluginFunctionProxy(CPluginFunction function) { (*function)(); }
 };
 
 #define USE_OSGPLUGIN(ext) \
@@ -750,11 +750,16 @@ struct PluginFunctionProxy
 /// @param NAME             A unique name for this extension.
 /// @param CLASS            The fully-qualified name of the wrapped class.
 #define BEGIN_EXTEND_OBJECT_WRAPPER(NAME, CLASS) \
-    extern void extend_wrapper_propfunc_##NAME(osgDB::ObjectWrapper* wrapper); \
-    static osgDB::PluginFunctionProxy extend_wrapper_proxy_##NAME(extend_wrapper_propfunc_##NME); \
+    extern "C" void extend_wrapper_propfunc_##NAME(); \
+    static osgDB::PluginFunctionProxy extend_wrapper_proxy_##NAME(extend_wrapper_propfunc_##NAME); \
     typedef CLASS MyClass; \
-    void extend_wrapper_propfunc_##NAME(osgDB::ObjectWrapper* wrapper) { \
-        osgDB::Registry::instance()->getObjectWrapperManager()->loadWrapperLibraries( CLASS );
+    void extend_wrapper_propfunc_##NAME() { \
+        OSG_NOTICE << "Extending wrapper for " #CLASS " in " #NAME << std::endl; \
+        osg::ref_ptr<osgDB::ObjectWrapperManager> owm(osgDB::Registry::instance()->getObjectWrapperManager()); \
+        if(!owm.valid()) { OSG_WARN << "Can't extend " #CLASS " in " #NAME ": No ObjectWrapperManager" << std::endl; return; } \
+        owm->loadWrapperLibraries( #CLASS ); \
+        osg::ref_ptr<osgDB::ObjectWrapper> wrapper(owm->findWrapper( #CLASS )); \
+        if(!wrapper.valid()) { OSG_WARN << "Can't extend " #CLASS " in " #NAME ": No wrapper" << std::endl; return; }
 
 /// End a block that began with #BEGIN_EXTEND_OBJECT_WRAPPER().
 #define END_EXTEND_OBJECT_WRAPPER() \
