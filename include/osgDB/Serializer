@@ -183,7 +183,7 @@ public:
     };
 
 
-    BaseSerializer(int usage) : _firstVersion(0), _lastVersion(INT_MAX), _usage(usage) {}
+    BaseSerializer(int usage) : _firstVersion(0), _lastVersion(INT_MAX), _serializerUsage(usage) {}
 
     /// Set an osg::Object (or subclass) property on an osg::Object
     /// (or subclass) instance.
@@ -223,10 +223,10 @@ public:
     virtual IntLookup* getIntLookup() { return 0; }
 
     /// Get the osgDB::BaseSerializer::Usage for this property
-    virtual int getUsage() const { return _usage; }
+    virtual int getUsage() const { return _serializerUsage; }
 
     /// Set the osgDB::BaseSerializer::Usage for this property directly
-    void setUsage(int usage) { _usage = usage; }
+    void setUsage(int usage) { _serializerUsage = usage; }
 
     /// Set the osgDB::BaseSerializer::Usage for this property based on
     /// whether it has a getter and setter.  If it has both, the property
@@ -239,15 +239,17 @@ public:
                   ((hasSetter) ? BaseSerializer::SET_PROPERTY : 0) );
     }
 
-    bool supportsReadWrite() const { return (_usage & READ_WRITE_PROPERTY)!=0; }
-    bool supportsGetSet() const { return (_usage & GET_SET_PROPERTY)!=0; }
-    bool supportsGet() const { return (_usage & GET_PROPERTY)!=0; }
-    bool supportsSet() const { return (_usage & SET_PROPERTY)!=0; }
+    bool supportsReadWrite() const { return (getUsage() & READ_WRITE_PROPERTY)!=0; }
+    bool supportsGetSet() const { return (getUsage() & GET_SET_PROPERTY)!=0; }
+    bool supportsGet() const { return (getUsage() & GET_PROPERTY)!=0; }
+    bool supportsSet() const { return (getUsage() & SET_PROPERTY)!=0; }
 
 protected:
     int _firstVersion;  ///< Library version when the serializer is first introduced
     int _lastVersion;   ///< Library version when the serializer is last required
-    int _usage;         ///< How the Serializer can be used.
+
+private:
+    int _serializerUsage;       ///< How the Serializer can be used.
 };
 
 /// Serializer for osgDB::BaseSerializer::Type::RW_USER properties
@@ -1662,12 +1664,17 @@ public:
     /// Get the osgDB::BaseSerializer::Usage for this property, but do not
     /// permit it to be READ_WRITE_PROPERTY.
     virtual int getUsage() const {
-        if ( (_usage & BaseSerializer::READ_WRITE_PROPERTY) != 0 ) {
+        // Get the usage specified at construction time via the
+        // ParentType() constructor.
+        int usage = ParentType::getUsage();
+
+        // Sanitize it
+        if ( (usage & BaseSerializer::READ_WRITE_PROPERTY) != 0 ) {
             OSG_WARN << "osgDB::VirtualProperty: Virtual property " << _name
                 << " cannot be READ_WRITE - forcing to GET_SET" << std::endl;
             return BaseSerializer::GET_SET_PROPERTY;
         }
-        return _usage;
+        return usage;
     }
 
     /// Set the virtual property on \p obj from data in \p is
