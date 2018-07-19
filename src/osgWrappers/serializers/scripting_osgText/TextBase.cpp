@@ -101,7 +101,7 @@ public:
 
 };
 
-/// osg::TextBase CharacterSize property: Height as an RW_UINT value
+/// osg::TextBase CharacterSize property: Height as an RW_FLOAT value
 class CharHeightSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
 {
 public:
@@ -123,7 +123,7 @@ public:
 
 };
 
-/// osg::TextBase CharacterSize property: AspectRatio as an RW_UINT value
+/// osg::TextBase CharacterSize property: AspectRatio as an RW_FLOAT value
 class CharAspectRatioSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
 {
 public:
@@ -171,7 +171,7 @@ public:
 
 };
 
-BEGIN_EXTEND_OBJECT_WRAPPER( TestPlugin_osgText_TextBase, osgText::TextBase)
+BEGIN_EXTEND_OBJECT_WRAPPER( scripting_osgText_TextBase, osgText::TextBase)
     ADD_VIRTUAL_PROPERTY_SERIALIZER( FontName, FontNameSerializer );
     ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionW, ResolutionWSerializer );
     ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionH, ResolutionHSerializer );

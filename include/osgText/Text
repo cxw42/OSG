@@ -280,6 +280,7 @@ public:
 
     void addGlyphQuad(Glyph* glyph, const osg::Vec2& minc, const osg::Vec2& maxc, const osg::Vec2& mintc, const osg::Vec2& maxtc);
 
+#if 0
     // New accessors for script use
     float getBackdropOffsetH() const { return getBackdropHorizontalOffset(); }
     float getBackdropOffsetV() const { return getBackdropVerticalOffset(); }
@@ -320,6 +321,7 @@ public:
                 getColorGradientBottomLeft(), getColorGradientBottomRight(),
                 value);
     }
+#endif
 
 protected:
 

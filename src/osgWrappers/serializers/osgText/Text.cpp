@@ -91,6 +91,7 @@ REGISTER_OBJECT_WRAPPER( osgText_Text,
 
     ADD_USER_SERIALIZER( ColorGradientCorners );  // _colorGradientTopLeft .. _colorGradientBottomRight
 
+#if 0
     // New accessors to replace the user serializers, for script use.
 
     // Replace the BackdropOffset serializer
@@ -108,5 +109,6 @@ REGISTER_OBJECT_WRAPPER( osgText_Text,
     SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
     ADD_VEC4_SERIALIZER(CGTopRight, osg::Vec4());
     SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
+#endif
 
 }
