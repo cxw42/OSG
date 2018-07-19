@@ -62,4 +62,4 @@ ADD_SUBDIRECTORY(osgUI)
 
 ################################################################################
 # Additional support for scripting
-ADD_SUBDIRECTORY(example_scripting)
+ADD_SUBDIRECTORY(scripting_osgText)
