@@ -197,6 +197,7 @@ REGISTER_OBJECT_WRAPPER( osgText_TextBase,
     // user serializers above.  TODO eventually: if Robert approves, use these
     // instead of the user serializers.
 
+#if 0
     // Replace Font serializer
     ADD_STRING_SERIALIZER(FontName, "");
     SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
@@ -218,5 +219,6 @@ REGISTER_OBJECT_WRAPPER( osgText_TextBase,
     // are 8-bit clean and can handle UTF-8.
     ADD_STRING_SERIALIZER(TextUTF8, "");
     SET_USAGE(osgDB::BaseSerializer::GET_SET_PROPERTY);
+#endif
 
 }

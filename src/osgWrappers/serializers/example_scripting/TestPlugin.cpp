@@ -27,21 +27,133 @@
 #include <osgDB/Registry>
 #include <osg/Notify>
 
-#include <osgText/Text>
+#include <osgText/TextBase>
 
-/// Text property, but as a UTF-8 string rather than as an RW_USER serializer
-class Text8Serializer:
-    public osgDB::VirtualPropertySerializer<osgText::Text>
+/// osg::TextBase Font property, but as a UTF-8 string filename rather than as
+/// an RW_USER serializer
+class FontNameSerializer:
+    public osgDB::VirtualPropertySerializer<osgText::TextBase>
 {
 public:
-    typedef osgDB::VirtualPropertySerializer<osgText::Text> ParentType;
-    Text8Serializer(const char* name):
-        ParentType( name,
-                    osgDB::BaseSerializer::GET_SET_PROPERTY,
-                    osgDB::BaseSerializer::RW_STRING)
-    {}
+    VPS_COMMON(FontNameSerializer, osgText::TextBase, GET_SET, STRING)
 
-    virtual bool setPropertyFrom( osgDB::InputStream& is, TargetType& object )
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
+    {
+        std::string newname;
+        is >> newname;
+        object.setFont(newname);
+        return true;
+    }
+
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
+    {
+        if(object.getFont()) {
+            os << object.getFont()->getFileName();
+        } else {
+            os << "";
+        }
+        return true;
+    }
+
+};
+
+/// osg::TextBase FontSize property: Width as an RW_UINT value
+class ResolutionWSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
+{
+public:
+    VPS_COMMON(ResolutionWSerializer, osgText::TextBase, GET_SET, UINT)
+
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
+    {
+        unsigned int width;
+        is >> width;
+        object.setFontResolution(width, object.getFontHeight());
+        return true;
+    }
+
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
+    {
+        os << object.getFontWidth();
+        return true;
+    }
+
+};
+
+/// osg::TextBase FontSize property: Height as an RW_UINT value
+class ResolutionHSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
+{
+public:
+    VPS_COMMON(ResolutionHSerializer, osgText::TextBase, GET_SET, UINT)
+
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
+    {
+        unsigned int height;
+        is >> height;
+        object.setFontResolution(object.getFontWidth(), height);
+        return true;
+    }
+
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
+    {
+        os << object.getFontHeight();
+        return true;
+    }
+
+};
+
+/// osg::TextBase CharacterSize property: Height as an RW_UINT value
+class CharHeightSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
+{
+public:
+    VPS_COMMON(CharHeightSerializer, osgText::TextBase, GET_SET, FLOAT)
+
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
+    {
+        float height;
+        is >> height;
+        object.setCharacterSize(height);
+        return true;
+    }
+
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
+    {
+        os << object.getCharacterHeight();
+        return true;
+    }
+
+};
+
+/// osg::TextBase CharacterSize property: AspectRatio as an RW_UINT value
+class CharAspectRatioSerializer: public osgDB::VirtualPropertySerializer<osgText::TextBase>
+{
+public:
+    VPS_COMMON(CharAspectRatioSerializer, osgText::TextBase, GET_SET, FLOAT)
+
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
+    {
+        float ratio;
+        is >> ratio;
+        object.setCharacterSize(object.getCharacterHeight(), ratio);
+        return true;
+    }
+
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
+    {
+        os << object.getCharacterAspectRatio();
+        return true;
+    }
+
+};
+
+/// osg::TextBase Text property, but as a UTF-8 string rather than as an
+/// RW_USER serializer
+class TextUTF8Serializer:
+    public osgDB::VirtualPropertySerializer<osgText::TextBase>
+{
+public:
+    VPS_COMMON(TextUTF8Serializer, osgText::TextBase, GET_SET, STRING)
+
+    virtual bool setPropertyFromStream( osgDB::InputStream& is, TargetType& object )
     {
         std::string utf8chars;      ///< the new text
         is >> utf8chars;        // works since #is is guaranteed to be binary
@@ -49,7 +161,7 @@ public:
         return true;
     }
 
-    virtual bool getPropertyInto( osgDB::OutputStream& os, const TargetType& object )
+    virtual bool getPropertyIntoStream( osgDB::OutputStream& os, const TargetType& object )
     {
         std::string utf8chars;      ///< the text in #object
         utf8chars = object.getText().createUTF8EncodedString();
@@ -59,8 +171,13 @@ public:
 
 };
 
-BEGIN_EXTEND_OBJECT_WRAPPER( TestPlugin_osgText_Text, osgText::Text)
-    ADD_VIRTUAL_PROPERTY_SERIALIZER( Text8, Text8Serializer );
+BEGIN_EXTEND_OBJECT_WRAPPER( TestPlugin_osgText_TextBase, osgText::TextBase)
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( FontName, FontNameSerializer );
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionW, ResolutionWSerializer );
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionH, ResolutionHSerializer );
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( CharHeight, CharHeightSerializer );
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( CharAspectRatio, CharAspectRatioSerializer );
+    ADD_VIRTUAL_PROPERTY_SERIALIZER( TextUTF8, TextUTF8Serializer );
 END_EXTEND_OBJECT_WRAPPER()
 
 

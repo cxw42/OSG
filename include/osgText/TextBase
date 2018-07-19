@@ -280,6 +280,7 @@ public:
     /** Get the internal matrix used to provide positioning of text.*/
     const osg::Matrix& getMatrix() const { return _matrix; }
 
+#if 0
     // Additional accessors for scripts
 
     /// Get the filename of the font, or an empty string if none.
@@ -342,6 +343,7 @@ public:
     void setTextUTF8(const std::string& utf8str) {
         setText(utf8str, osgText::String::ENCODING_UTF8);
     }
+#endif
 
 
 protected:
