@@ -122,16 +122,33 @@ public:
     typedef void (*AddValueFunc)( IntLookup* lookup );
     UserLookupTableProxy( AddValueFunc func ) { if ( func ) (*func)(&_lookup); }
 
+    /// The bidirectional lookup table.  Not a pointer, but the actual table,
+    /// so that it can be initialized statically (see #BEGIN_USER_TABLE()).
     IntLookup _lookup;
 };
 
+/// Create a statically-initialized lookup table between strings and
+/// enum values defined in \p CLASS.  The resulting lookup table can be
+/// accessed by #USER_READ_FUNC() and #USER_WRITE_FUNC().
+/// Add values to the table with #ADD_USER_VALUE(); end the table construction
+/// with #END_USER_TABLE().
 #define BEGIN_USER_TABLE(NAME, CLASS) \
     static void add_user_value_func_##NAME(osgDB::IntLookup*); \
     static osgDB::UserLookupTableProxy s_user_lookup_table_##NAME(&add_user_value_func_##NAME); \
     static void add_user_value_func_##NAME(osgDB::IntLookup* lookup) { typedef CLASS MyClass
-#define ADD_USER_VALUE(VALUE) lookup->add(#VALUE, MyClass::VALUE)
-#define END_USER_TABLE() }
 
+/// Add a value to a table opened with #BEGIN_USER_TABLE()
+#define ADD_USER_VALUE(VALUE) \
+        lookup->add(#VALUE, MyClass::VALUE)
+
+/// End a table opened with #BEGIN_USER_TABLE()
+#define END_USER_TABLE() \
+    return; \
+    }
+
+/// Create a function called \p FUNCNAME that can be used by a reading function
+/// to read from an input stream a value from the user table \p NAME.
+/// Generally used by serializers; is not a serializer itself.
 #define USER_READ_FUNC(NAME, FUNCNAME) \
     static int FUNCNAME(osgDB::InputStream& is) { \
         int value; if (is.isBinary()) is >> value; \
@@ -139,6 +156,9 @@ public:
         value = (s_user_lookup_table_##NAME)._lookup.getValue(str.c_str()); } \
         return value; }
 
+/// Create a function called \p FUNCNAME that can be used by a writing function
+/// to write to an output stream a value from the user table \p NAME.
+/// Generally used by serializers; is not a serializer itself.
 #define USER_WRITE_FUNC(NAME, FUNCNAME) \
     static void FUNCNAME(osgDB::OutputStream& os, int value) { \
         if (os.isBinary()) os << value; \
@@ -628,7 +648,7 @@ public:
 /// of that class.  The getter should be <tt>const P* getter() const</tt>
 /// and the setter should be <tt>void setter(const P*)</tt>.
 ///
-/// @tparam C   The class whose property is being serialized
+/// @tparam C   The class that has the Object property being serialized
 /// @tparam P   The C++ subclass of osg::Object being serialized
 template<typename C, typename P>
 class ObjectSerializer : public TemplateSerializer<P*>
@@ -643,8 +663,17 @@ public:
         ParentType::setUsage( _getter!=0, _setter!=0);
     }
 
-    virtual bool set(osg::Object& obj, void* value) { C& object = OBJECT_CAST<C&>(obj); (object.*_setter)( dynamic_cast<P*>(*(reinterpret_cast<osg::Object**>(value))) ); return true; }
-    virtual bool get(const osg::Object& obj, void* value) { const C& object = OBJECT_CAST<const C&>(obj);*(reinterpret_cast<const osg::Object**>(value )) = dynamic_cast<const osg::Object*>((object.*_getter)()); return true; }
+    virtual bool set(osg::Object& obj, void* value) {
+        C& object = OBJECT_CAST<C&>(obj);
+        (object.*_setter)( dynamic_cast<P*>(*(reinterpret_cast<osg::Object**>(value))) );
+        return true;
+    }
+
+    virtual bool get(const osg::Object& obj, void* value) {
+        const C& object = OBJECT_CAST<const C&>(obj);
+        *(reinterpret_cast<const osg::Object**>(value )) = dynamic_cast<const osg::Object*>((object.*_getter)());
+        return true;
+    }
 
     virtual bool read( InputStream& is, osg::Object& obj )
     {
@@ -719,8 +748,17 @@ public:
         ParentType::setUsage( _getter!=0, _setter!=0);
     }
 
-    virtual bool set(osg::Object& obj, void* value) { C& object = OBJECT_CAST<C&>(obj); (object.*_setter)( *(reinterpret_cast<P**>(value)) ); return true; }
-    virtual bool get(const osg::Object& obj, void* value) { const C& object = OBJECT_CAST<const C&>(obj);*(reinterpret_cast<const P**>(value )) = (object.*_getter)(); return true; }
+    virtual bool set(osg::Object& obj, void* value) {
+        C& object = OBJECT_CAST<C&>(obj);
+        (object.*_setter)( *(reinterpret_cast<P**>(value)) );
+        return true;
+    }
+
+    virtual bool get(const osg::Object& obj, void* value) {
+        const C& object = OBJECT_CAST<const C&>(obj);
+        *(reinterpret_cast<const P**>(value )) = (object.*_getter)();
+        return true;
+    }
 
     virtual bool read( InputStream& is, osg::Object& obj )
     {
@@ -1685,7 +1723,7 @@ public:
             TargetType *ptr = dynamic_cast<TargetType*>(&obj);
             if ( ptr != 0 )
             {
-                return setPropertyFrom(is, *ptr);
+                return setPropertyFromStream(is, *ptr);
             }
             else
             {
@@ -1711,7 +1749,7 @@ public:
             const TargetType *ptr = dynamic_cast<const TargetType*>(&obj);
             if ( ptr != 0 )
             {
-                return getPropertyInto(os, *ptr);
+                return getPropertyIntoStream(os, *ptr);
             }
             else
             {
@@ -1737,7 +1775,7 @@ protected:
     /// @param is       An input stream holding data of interest
     /// @param object   The osg::Object (or subclass) instance that should be
     ///                 updated based on information in \p is
-    virtual bool setPropertyFrom( InputStream& is, TargetType& object ) {
+    virtual bool setPropertyFromStream( InputStream& is, TargetType& object ) {
         (void)is; (void)object; return false;
     }
 
@@ -1747,13 +1785,24 @@ protected:
     /// @param os       The output stream to which the data should be written.
     /// @param object   The osg::Object (or subclass) instance from which
     ///                 relevant data should be retrieved.
-    virtual bool getPropertyInto( OutputStream& os, const TargetType& object ) {
+    virtual bool getPropertyIntoStream( OutputStream& os, const TargetType& object ) {
         (void)os; (void)object; return false;
     }
 
     std::string _name;
     BaseSerializer::Type _type;
 };
+
+/// Add the boilerplate for a standard VirtualPropertySerializer
+#define VPS_COMMON(CLASSNAME, TARGET, USAGE, TYPE) \
+    public: \
+        typedef osgDB::VirtualPropertySerializer< TARGET > ParentType; \
+        CLASSNAME(const char* name): \
+            ParentType( name, \
+                        osgDB::BaseSerializer::USAGE##_PROPERTY, \
+                        osgDB::BaseSerializer::RW_##TYPE) \
+        {}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // ADDING MANIPULATORS - macros for use in src/osgWrappers/serializers files
