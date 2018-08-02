@@ -20,6 +20,16 @@ SET(TARGET_SRC
     ../common/Version.cpp
     ../common/Atomic.cpp
 )
+
+# Cygwin now only exposes some of the pthread symbols with _GNU_SOURCE.
+# Rather than force the whole codebase to _GNU_SOURCE, just disable the
+# functions that are hidden without it.
+IF(CYGWIN)
+    SET(HAVE_PTHREAD_YIELD FALSE)
+    SET(HAVE_PTHREAD_GETCONCURRENCY FALSE)
+    SET(HAVE_PTHREAD_SETCONCURRENCY FALSE)
+ENDIF()
+
 IF(ANDROID)
       ADD_DEFINITIONS(-D_GNU_SOURCE)
       SET(CMAKE_REQUIRED_DEFINITIONS "${CMAKE_REQUIRED_DEFINITIONS} -D_GNU_SOURCE")
