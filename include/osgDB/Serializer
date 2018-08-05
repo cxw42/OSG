@@ -2043,22 +2043,25 @@ protected:
         #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_MATRIX )
 
 
-#define ADD_BOUNDINGBOXF_SERIALIZER(PROP, DEF) \
+#define ADD_BOUNDINGBOXF_SERIALIZER2(NAME, PROP, DEF) \
     wrapper->addSerializer( new osgDB::PropByRefSerializer< MyClass, osg::BoundingBoxf >( \
-        #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGBOXF )
+        #NAME, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGBOXF )
+#define ADD_BOUNDINGBOXF_SERIALIZER(PROP, DEF) ADD_BOUNDINGBOXF_SERIALIZER2(PROP, PROP, DEF)
 
-#define ADD_BOUNDINGBOXD_SERIALIZER(PROP, DEF) \
+#define ADD_BOUNDINGBOXD_SERIALIZER2(NAME, PROP, DEF) \
     wrapper->addSerializer( new osgDB::PropByRefSerializer< MyClass, osg::BoundingBoxd >( \
-        #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGBOXD )
+        #NAME, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGBOXD )
+#define ADD_BOUNDINGBOXD_SERIALIZER(PROP, DEF) ADD_BOUNDINGBOXD_SERIALIZER2(PROP, PROP, DEF)
 
-#define ADD_BOUNDINGSPHEREF_SERIALIZER(PROP, DEF) \
+#define ADD_BOUNDINGSPHEREF_SERIALIZER2(NAME, PROP, DEF) \
     wrapper->addSerializer( new osgDB::PropByRefSerializer< MyClass, osg::BoundingSpheref >( \
-        #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGSPHEREF )
+        #NAME, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGSPHEREF )
+#define ADD_BOUNDINGSPHEREF_SERIALIZER(PROP, DEF) ADD_BOUNDINGSPHEREF_SERIALIZER2(PROP, PROP, DEF)
 
-#define ADD_BOUNDINGSPHERED_SERIALIZER(PROP, DEF) \
+#define ADD_BOUNDINGSPHERED_SERIALIZER2(NAME, PROP, DEF) \
     wrapper->addSerializer( new osgDB::PropByRefSerializer< MyClass, osg::BoundingSphered >( \
-        #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGSPHERED )
-
+        #NAME, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_BOUNDINGSPHERED )
+#define ADD_BOUNDINGSPHERED_SERIALIZER(PROP, DEF) ADD_BOUNDINGSPHERED_SERIALIZER2(PROP, PROP, DEF)
 
 #define ADD_GLENUM_SERIALIZER(PROP, TYPE, DEF) \
     wrapper->addSerializer( new osgDB::GLenumSerializer< MyClass, TYPE >( \

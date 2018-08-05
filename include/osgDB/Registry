@@ -709,34 +709,54 @@ struct PluginFunctionProxy
     PluginFunctionProxy(CPluginFunction function) { (*function)(); }
 };
 
+/// Link in the wrappers for the given plugin in static-linking configurations.
+/// Calls the \c osgdb_EXT function defined by #REGISTER_OSGPLUGIN() or
+/// #REGISTER_OSGIMAGEPROCESSOR().
 #define USE_OSGPLUGIN(ext) \
     extern "C" void osgdb_##ext(void); \
     static osgDB::PluginFunctionProxy proxy_##ext(osgdb_##ext);
 
+/// Link in the wrappers for the given .osg wrapper in static-linking
+/// configurations.
 #define USE_DOTOSGWRAPPER(classname) \
     extern "C" void dotosgwrapper_##classname(void); \
     static osgDB::PluginFunctionProxy proxy_dotosgwrapper_##classname(dotosgwrapper_##classname);
 
+/// Link in the wrappers for the given .osg wrapper library in static-linking
+/// configurations.
 #define USE_DOTOSGWRAPPER_LIBRARY(libname) \
     extern "C" void dotosgwrapper_library_##libname(void); \
     static osgDB::PluginFunctionProxy proxy_dotosgwrapper_library_##libname(dotosgwrapper_library_##libname);
 
+/// Link in the wrappers for the given class in static-linking configurations.
+/// Calls the function defined for this purpose in #REGISTER_OBJECT_WRAPPER().
+/// See http://forum.openscenegraph.org/viewtopic.php?t=14841 for more.
 #define USE_SERIALIZER_WRAPPER(classname) \
     extern "C" void wrapper_serializer_##classname(void); \
     static osgDB::PluginFunctionProxy proxy_serializer_##classname(wrapper_serializer_##classname);
 
+/// Pull in \p libname in static-linking situations.  This is required to
+/// trigger plugin registration at program startup, which is what happens
+/// in a statically-linked application.  To define a function for \p libname,
+/// use #DECLARE_SERIALIZER_WRAPPER_LIBRARY().
 #define USE_SERIALIZER_WRAPPER_LIBRARY(libname) \
     extern "C" void wrapper_serializer_library_##libname(void); \
     static osgDB::PluginFunctionProxy proxy_serializer_library_##libname(wrapper_serializer_library_##libname);
+
+/// Declare the function to be called by #USE_SERIALIZER_WRAPPER_LIBRARY().
+#define DECLARE_SERIALIZER_WRAPPER_LIBRARY(libname) \
+    extern "C" void wrapper_serializer_library_##libname(void) {}
 
 #define USE_COMPRESSOR_WRAPPER(classname) \
     extern "C" void wrapper_compressor_##classname(void); \
     static osgDB::PluginFunctionProxy proxy_compressor_##classname(wrapper_compressor_##classname);
 
+/// Defines the function called by #USE_OSGPLUGIN().
 #define REGISTER_OSGPLUGIN(ext, classname) \
     extern "C" void osgdb_##ext(void) {} \
     static osgDB::RegisterReaderWriterProxy<classname> g_proxy_##classname;
 
+/// Defines the function called by #USE_OSGPLUGIN().
 #define REGISTER_OSGIMAGEPROCESSOR(ext, classname) \
     extern "C" void osgdb_##ext(void) {} \
     static osgDB::RegisterImageProcessorProxy<classname> g_proxy_##classname;
@@ -746,10 +766,13 @@ struct PluginFunctionProxy
 /// #REGISTER_OBJECT_WRAPPER() or a related macro will already have taken
 /// effect by the time the code of the block runs.  End the block with
 /// #END_EXTEND_OBJECT_WRAPPER().
+/// Also defines the \c extend_wrapper_serializer_NAME function that is
+/// called by #USE_EXTEND_OBJECT_WRAPPER().
 ///
 /// @param NAME             A unique name for this extension.
 /// @param CLASS            The fully-qualified name of the wrapped class.
 #define BEGIN_EXTEND_OBJECT_WRAPPER(NAME, CLASS) \
+    extern "C" void extend_wrapper_serializer_##NAME() {} \
     extern "C" void extend_wrapper_propfunc_##NAME(); \
     static osgDB::PluginFunctionProxy extend_wrapper_proxy_##NAME(extend_wrapper_propfunc_##NAME); \
     typedef CLASS MyClass; \
@@ -767,6 +790,13 @@ struct PluginFunctionProxy
     }
 // Note: the "return;" is so that Doxygen will pick up the definition as a
 // block rather than a single symbol.
+
+/// Use a block defined with #BEGIN_EXTEND_OBJECT_WRAPPER().  Used for
+/// static-linking configurations.
+/// @param NAME             The name used in #BEGIN_EXTEND_OBJECT_WRAPPER().
+#define USE_EXTEND_OBJECT_WRAPPER(NAME) \
+    extern "C" void extend_wrapper_serializer_##NAME(); \
+    static osgDB::PluginFunctionProxy proxy_serializer_library_##libname(extend_wrapper_serializer_##NAME);
 
 }
 

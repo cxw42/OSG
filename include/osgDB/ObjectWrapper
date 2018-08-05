@@ -265,6 +265,9 @@ protected:
 };
 
 /// Begin the serializer-registration block for class \p CLASS.
+/// Also defines the \c wrapper_serializer_NAME function that is called by
+/// #USE_SERIALIZER_WRAPPER().
+///
 /// @param NAME             A unique name for this wrapper.
 /// @param CREATEINSTANCE   An expression that will return a new instance
 ///                         of \p CLASS.
