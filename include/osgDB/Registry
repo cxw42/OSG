@@ -796,7 +796,7 @@ struct PluginFunctionProxy
 /// @param NAME             The name used in #BEGIN_EXTEND_OBJECT_WRAPPER().
 #define USE_EXTEND_OBJECT_WRAPPER(NAME) \
     extern "C" void extend_wrapper_serializer_##NAME(); \
-    static osgDB::PluginFunctionProxy proxy_serializer_library_##libname(extend_wrapper_serializer_##NAME);
+    static osgDB::PluginFunctionProxy proxy_serializer_library_##NAME(extend_wrapper_serializer_##NAME);
 
 }
 

@@ -2092,9 +2092,12 @@ protected:
         #PROP, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_LIST )
 
 
-#define ADD_VECTOR_SERIALIZER(PROP, TYPE, ELEMENTTYPE, NUMELEMENTSONROW) \
+#define ADD_VECTOR_SERIALIZER2(NAME, PROP, TYPE, ELEMENTTYPE, NUMELEMENTSONROW) \
     wrapper->addSerializer( new osgDB::VectorSerializer< MyClass, TYPE >( \
-        #PROP, &MyClass::get##PROP, &MyClass::get##PROP, &MyClass::set##PROP, ELEMENTTYPE, NUMELEMENTSONROW), osgDB::BaseSerializer::RW_VECTOR )
+        #NAME, &MyClass::get##PROP, &MyClass::get##PROP, &MyClass::set##PROP, ELEMENTTYPE, NUMELEMENTSONROW), osgDB::BaseSerializer::RW_VECTOR )
+
+#define ADD_VECTOR_SERIALIZER(PROP, TYPE, ELEMENTTYPE, NUMELEMENTSONROW) \
+    ADD_VECTOR_SERIALIZER2(PROP, PROP, TYPE, ELEMENTTYPE, NUMELEMENTSONROW)
 
 #define ADD_ISAVECTOR_SERIALIZER(PROP, ELEMENTTYPE, NUMELEMENTSONROW) \
     wrapper->addSerializer( new osgDB::IsAVectorSerializer< MyClass >( #PROP, ELEMENTTYPE, NUMELEMENTSONROW), osgDB::BaseSerializer::RW_VECTOR )
