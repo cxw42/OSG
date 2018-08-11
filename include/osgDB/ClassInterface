@@ -115,7 +115,6 @@ DECLARE_TYPE(osg::BoundingSphered, BOUNDINGSPHERED)
 class PropertyOutputIterator;
 class PropertyInputIterator;
 
-
 /** ClassInterface provides a general means of checking for supported properties of classes, and getting/setting thoses properties.
     Uses the osgDB serializers to do the actual object query/get/set.
 */
@@ -173,6 +172,15 @@ public:
     /// check for support of specified method
     bool hasMethod(const osg::Object* object, const std::string& methodName) const;
 
+    /// Get all the supported methods.  Uses a PropertyMap, but all the types
+    /// are returned as osgDB::BaseSerializer::RW_UNDEFINED.
+    /// Clears \c properties before populating it.
+    bool getSupportedMethods(const osg::Object* object, PropertyMap& properties,
+            bool searchAssociates=true) const;
+
+    /// Get all the supported methods for a given class name
+    bool getSupportedMethods(const std::string& compoundClassName,
+            PropertyMap& properties, bool searchAssociates=true) const;
 
     /// Properties supported for a range of classes, used for white and black lists
     typedef std::map<std::string, PropertyMap> ObjectPropertyMap;

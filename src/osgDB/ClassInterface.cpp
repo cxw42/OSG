@@ -676,6 +676,51 @@ bool ClassInterface::hasMethod(const osg::Object* object, const std::string& met
     return hasMethod(object->getCompoundClassName(), methodName);
 }
 
+bool ClassInterface::getSupportedMethods(const osg::Object* object, PropertyMap& properties,
+        bool searchAssociates) const
+{
+    return getSupportedMethods(object->getCompoundClassName(), properties,
+                                searchAssociates);
+}
+
+bool ClassInterface::getSupportedMethods(const std::string& compoundClassName,
+        PropertyMap& properties, bool searchAssociates) const
+{
+    ObjectWrapper* ow = osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper(compoundClassName);
+    if (!ow) return false;
+
+    const ObjectWrapper::MethodObjectMap& ow_methodObjectMap = ow->getMethodObjectMap();
+    for(
+        ObjectWrapper::MethodObjectMap::const_iterator oitr = ow_methodObjectMap.cbegin();
+        oitr != ow_methodObjectMap.cend();
+        ++oitr
+    ) {
+        properties[oitr->first] = osgDB::BaseSerializer::RW_UNDEFINED;
+    }
+
+    if(!searchAssociates) return true;
+
+    const ObjectWrapper::RevisionAssociateList& associates = ow->getAssociates();
+    for(ObjectWrapper::RevisionAssociateList::const_iterator aitr = associates.begin();
+        aitr != associates.end();
+        ++aitr)
+    {
+        osgDB::ObjectWrapper* aow = osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper(aitr->_name);
+        if (aow)
+        {
+            const ObjectWrapper::MethodObjectMap& aow_methodObjectMap = aow->getMethodObjectMap();
+            for(
+                ObjectWrapper::MethodObjectMap::const_iterator aoitr = aow_methodObjectMap.cbegin();
+                aoitr != aow_methodObjectMap.cend();
+                ++aoitr
+            ) {
+                properties[aoitr->first] = osgDB::BaseSerializer::RW_UNDEFINED;
+            }
+        }
+    }
+
+    return true;
+}
 
 } // end of osgDB namespace
 
