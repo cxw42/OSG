@@ -19,6 +19,14 @@
 
 using namespace lua;
 
+/// A Lua function that gives you a place to put a C++ breakpoint.
+static int cxx_breakpoint(lua_State * _lua)
+{
+    volatile int i = 0;
+    ++i;    // Put a breakpoint here if you want one
+    return 0;
+}
+
 class LuaCallbackObject : public osg::CallbackObject
 {
 public:
@@ -2168,6 +2176,14 @@ void LuaScriptEngine::initialize()
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, dir, 1);
         lua_setglobal(_lua, "dir");
+    }
+
+    // provide global "cxx_breakpoint" method that does nothing, but is a
+    // place to put a C++ breakpoint.
+    {
+        lua_pushlightuserdata(_lua, this);
+        lua_pushcclosure(_lua, cxx_breakpoint, 1);
+        lua_setglobal(_lua, "cxx_breakpoint");
     }
 
     // Set up the __newindex and __index methods for looking up implementations
