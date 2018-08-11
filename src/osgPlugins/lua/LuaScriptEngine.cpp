@@ -1860,6 +1860,123 @@ static int getObjectPtr(lua_State * _lua)
     return luaL_error(_lua, "Invalid call to getObjectPtr");
 }
 
+/// Return a table representing the properties, methods, and userdata
+/// of an osg::Object.
+/// \pre    The Lua stack has exactly one argument on it, which is a
+///         table representing an osg::Object.
+/// \post   If the table was valid, a result table is left at the stack top
+/// \return The number of result values pushed on the Lua stack, or a
+///         luaL_error return.
+static int dir(lua_State * _lua)
+{
+    osgDB::ClassInterface ci;
+    const LuaScriptEngine* lse = reinterpret_cast<const LuaScriptEngine*>(lua_topointer(_lua, lua_upvalueindex(1)));
+    if(!lse) return luaL_error(_lua, "Can't find scripting engine");
+
+    int n = lua_gettop(_lua);    /* number of arguments */
+    if (n!=1) return luaL_error(_lua, "syntax: dir(object)");
+
+    if (lua_type(_lua, 1)!=LUA_TTABLE) return luaL_error(_lua, "dir() needs an object");
+
+    lua_pushstring(_lua, "object_ptr");
+    lua_rawget(_lua, -2);
+    if (lua_type(_lua, -1)!=LUA_TUSERDATA) {
+        return luaL_error(_lua, "Could not get object_ptr from provided table");
+    }
+
+    void *obj_ptr = lua_touserdata(_lua,-1);
+    osg::Object *object = *const_cast<osg::Object**>(
+            reinterpret_cast<const osg::Object**>(obj_ptr)
+    );
+    lua_pop(_lua, 1);       // pop the userdata
+
+    // Basic information
+    lua_newtable(_lua);                             // T ]
+    lua_pushstring(_lua, "compoundClassName");      // T K ]
+    lua_pushstring(_lua, object->getCompoundClassName().c_str());   // T K V ]
+    lua_rawset(_lua, -3);                           // T ]
+
+    lua_pushstring(_lua, "objectPtr");
+    lua_pushnumber(_lua, static_cast<lua_Number>(
+                            reinterpret_cast<unsigned long long>(object)));
+    lua_rawset(_lua, -3);
+
+    lua_pushstring(_lua, "dataVariance");
+    switch(object->getDataVariance()) {
+        case osg::Object::DYNAMIC: lua_pushstring(_lua, "DYNAMIC"); break;
+        case osg::Object::STATIC: lua_pushstring(_lua, "STATIC"); break;
+        case osg::Object::UNSPECIFIED: lua_pushstring(_lua, "UNSPECIFIED"); break;
+        default: lua_pushnil(_lua); break;
+    }
+    lua_rawset(_lua, -3);
+
+    // Properties
+    osgDB::ClassInterface::PropertyMap props;
+
+    lua_pushstring(_lua, "properties");     // T1 K ]
+    lua_newtable(_lua);                     // T1 K T2 ]
+    if(ci.getSupportedProperties(object, props)) {
+        for(osgDB::ClassInterface::PropertyMap::const_iterator it = props.cbegin();
+            it != props.cend();
+            ++it
+        ) {
+            lua_pushstring(_lua, it->first.c_str());    // T1 K T2 Propname ]
+            lua_pushstring(_lua, ci.getTypeName(it->second).c_str());  // T1 K T2 Propname Typestr ]
+            lua_rawset(_lua, -3);                       // T1 K T2 ]
+        }
+    }
+    lua_settable(_lua, -3);                 // T1 ]     stash properties
+
+    // Methods
+    osgDB::ClassInterface::PropertyMap methods;
+    lua_pushstring(_lua, "methods");        // T1 K ]
+    lua_newtable(_lua);                     // T1 K T3 ]
+    if(ci.getSupportedMethods(object, methods)) {
+        int dest_idx = 1;   // index in the methods table
+        for(osgDB::ClassInterface::PropertyMap::const_iterator it = methods.cbegin();
+            it != methods.cend();
+            ++it, ++dest_idx
+        ) {
+            lua_pushstring(_lua, it->first.c_str());    // T1 K T3 Methodname ]
+            lua_rawseti(_lua, -2, dest_idx);            // T1 K T3 ]
+        }
+    }
+    lua_settable(_lua, -3);                 // T1 ]     stash methods
+
+    // Userdata (in the OSG sense, not the Lua sense).
+    // For now, only report the objects in the userdata container, not the
+    // container's own userdata or the description list.
+    const osg::UserDataContainer* udc = object->getUserDataContainer();
+    lua_pushstring(_lua, "userdata");       // T1 K ]
+    lua_newtable(_lua);                     // T1 K T4 ]
+
+    if(udc) {
+        int arr_part_idx = 0;   // for storing anonymous objects
+        for(unsigned int i=0; i<udc->getNumUserObjects(); ++i) {
+            // Get the object
+            const osg::Object* uobj = udc->getUserObject(i);
+            if(!uobj) continue;
+            std::string uname = uobj->getName();
+
+            // Push the key
+            if(uname.empty()) {
+                lua_pushnumber(_lua, ++arr_part_idx);   // T1 K T4 K4 ]
+            } else {
+                lua_pushstring(_lua, uname.c_str());    // T1 K T4 K4 ]
+            }
+
+            // Push the value
+            lse->pushObject(const_cast<osg::Object *>(uobj));   // T1 K T4 K4 Obj ]
+
+            // Stash it
+            lua_rawset(_lua, -3);                       // T1 K T4 ]
+        }
+    }
+    lua_settable(_lua, -3);                 // T1 ]
+
+    return 1;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Object I/O support
@@ -2043,6 +2160,14 @@ void LuaScriptEngine::initialize()
         lua_pushlightuserdata(_lua, this);
         lua_pushcclosure(_lua, getObjectPtr, 1);
         lua_setglobal(_lua, "getObjectPtr");
+    }
+
+    // provide global "dir" method for getting the properties, methods,
+    // and userdata from a Lua table representing an osg::Object.
+    {
+        lua_pushlightuserdata(_lua, this);
+        lua_pushcclosure(_lua, dir, 1);
+        lua_setglobal(_lua, "dir");
     }
 
     // Set up the __newindex and __index methods for looking up implementations
