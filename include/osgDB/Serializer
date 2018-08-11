@@ -2075,9 +2075,11 @@ protected:
     wrapper->addSerializer( new osgDB::StringSerializer< MyClass >( \
         #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_STRING )
 
-#define ADD_OBJECT_SERIALIZER(PROP, TYPE, DEF) \
+#define ADD_OBJECT_SERIALIZER2(NAME, PROP, TYPE, DEF) \
     wrapper->addSerializer( new osgDB::ObjectSerializer< MyClass, TYPE >( \
-        #PROP, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_OBJECT )
+        #NAME, DEF, &MyClass::get##PROP, &MyClass::set##PROP), osgDB::BaseSerializer::RW_OBJECT )
+#define ADD_OBJECT_SERIALIZER(PROP, TYPE, DEF) \
+    ADD_OBJECT_SERIALIZER2(PROP, PROP, TYPE, DEF)
 
 #define ADD_OBJECT_SERIALIZER_NO_SET(PROP, TYPE, DEF) \
     wrapper->addSerializer( new osgDB::ObjectSerializer< MyClass, TYPE >( \
