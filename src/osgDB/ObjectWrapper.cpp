@@ -774,22 +774,24 @@ ObjectWrapper* ObjectWrapperManager::findWrapper( const std::string& name )
     {
         std::string libName = std::string( name, 0, posDoubleColon );
 
+        bool try_again = false;     // If we loaded something, try again
         ObjectWrapper* found=0;
         osgDB::Registry::LoadStatus loadstatus;
+
         std::string nodeKitLib = osgDB::Registry::instance()->createLibraryNameForNodeKit(libName);
         loadstatus = osgDB::Registry::instance()->loadLibrary(nodeKitLib);
-        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
-            found = findWrapper(name);
+        if ( loadstatus==osgDB::Registry::LOADED ) try_again = true;
 
         std::string pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(std::string("serializers_")+libName);
         loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
-        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
-            found = findWrapper(name);
+        if ( loadstatus==osgDB::Registry::LOADED ) try_again = true;
 
         pluginLib = osgDB::Registry::instance()->createLibraryNameForExtension(libName);
         loadstatus = osgDB::Registry::instance()->loadLibrary(pluginLib);
-        if ( loadstatus==osgDB::Registry::LOADED || loadstatus==osgDB::Registry::PREVIOUSLY_LOADED)
-            found= findWrapper(name);
+        if ( loadstatus==osgDB::Registry::LOADED ) try_again = true;
+
+        if ( try_again )
+            found = findWrapper(name);
 
         if (found) found->setupAssociatesRevisionsInheritanceIfRequired();
 
