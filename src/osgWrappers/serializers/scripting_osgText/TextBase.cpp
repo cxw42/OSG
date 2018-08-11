@@ -173,6 +173,10 @@ public:
 
 BEGIN_EXTEND_OBJECT_WRAPPER( scripting_osgText_TextBase, osgText::TextBase)
     ADD_VIRTUAL_PROPERTY_SERIALIZER( FontName, FontNameSerializer );
+
+    ADD_OBJECT_SERIALIZER2( FontObject, Font, osgText::Font, NULL );
+    SET_USAGE( osgDB::BaseSerializer::GET_SET_PROPERTY );
+
     ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionW, ResolutionWSerializer );
     ADD_VIRTUAL_PROPERTY_SERIALIZER( ResolutionH, ResolutionHSerializer );
     ADD_VIRTUAL_PROPERTY_SERIALIZER( CharHeight, CharHeightSerializer );
