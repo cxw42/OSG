@@ -22,6 +22,14 @@
 
 #include <string.h>
 
+#ifdef OSG_HACK_RENAME_READERWRITER_INTERNALS
+#define curl_socket_typedef
+    // Don't use Win32 SOCKET; use the Cygwin sockets.
+typedef int curl_socket_t;      // from curl.h
+#define CURL_SOCKET_BAD -1
+    // from curl.h
+#endif // OSG_HACK_RENAME_READERWRITER_INTERNALS
+
 #include <curl/curl.h>
 
 #if LIBCURL_VERSION_NUM < 0x071503
