@@ -283,7 +283,7 @@ struct GraphicsWindowFunctionProxy
     extern "C" void graphicswindow_##ext(void); \
     static osgViewer::GraphicsWindowFunctionProxy graphicswindowproxy_##ext(graphicswindow_##ext);
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(OSG_CYGWIN_WIN32)
     #define USE_GRAPHICSWINDOW()  USE_GRAPICSWINDOW_IMPLEMENTATION(Win32)
 #elif defined(__APPLE__)
     #define USE_GRAPHICSWINDOW()  USE_GRAPICSWINDOW_IMPLEMENTATION(Carbon)

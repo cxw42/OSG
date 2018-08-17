@@ -27,6 +27,11 @@
 #include <set>
 #include <sstream>
 
+// Cygwin with a Win32 backend: in this file, use the WIN32 routines
+#ifdef OSG_CYGWIN_WIN32
+#define WIN32
+#endif
+
 #if defined(WIN32)
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN

@@ -46,8 +46,8 @@ ENDIF()
 # Note that the CMAKE_OSX_* variables are not well documented in
 # CMake 2.8, but they do officially exist.
 # See https://cmake.org/Bug/view.php?id=14695#c34953
-# Additionally, OSG_WINDOWING_SYSTEM is set here for OSX since its
-# value is needed to find the correct version of OpenGL (X11 or Cocoa).
+# Additionally, OSG_WINDOWING_SYSTEM is set here for OSX and Cygwin since its
+# value is needed to find the correct version of OpenGL (for OSX, X11 or Cocoa).
 IF(APPLE AND NOT ANDROID)
 
   # Here we check if the user specified IPhone SDK
@@ -105,7 +105,11 @@ IF(APPLE AND NOT ANDROID)
       # Warn user and continue at their own peril.
       MESSAGE(WARNING "OSX 10.3 and earlier not supported.")
     ENDIF()
-  ENDIF()
+  ENDIF() #iphone or simulator
+
+ELSEIF(CYGWIN)
+  SET(OSG_WINDOWING_SYSTEM "X11" CACHE STRING "Windowing system type for graphics window creation on Cygwin.  Options X11 (default) or Win32.")
+
 ENDIF()
 
 PROJECT(OpenSceneGraph)
@@ -286,16 +290,20 @@ IF(APPLE)
 
     OPTION(OSG_COMPILE_FRAMEWORKS "compile frameworks instead of dylibs (experimental)" OFF)
     SET(OSG_COMPILE_FRAMEWORKS_INSTALL_NAME_DIR "@executable_path/../Frameworks" CACHE STRING "install name dir for compiled frameworks")
+
+ELSEIF(${CYGWIN} AND ("${OSG_WINDOWING_SYSTEM}" STREQUAL "Win32"))
+    # Cygwin+Win32 backend: use the OpenGL from w32api
+    SET(CMAKE_DISABLE_FIND_PACKAGE_X11 ON)
+    SET(OPENGL_gl_LIBRARY /usr/lib/w32api/libopengl32.a)
+    SET(OPENGL_glu_LIBRARY /usr/lib/w32api/libglu32.a)
+    SET(OPENGL_INCLUDE_DIR /usr/include)
+
 ELSE()
-    # Non-Apple: Find OpenGL
+    # Non-Apple, non-Cygwin+Win32: Find OpenGL
     FIND_PACKAGE(OpenGL)
     FIND_PACKAGE(EGL)
 ENDIF()
 ENDIF()
-
-
-
-
 
 IF(UNIX AND NOT ANDROID)
     # Not sure what this will do on Cygwin and Msys
@@ -593,6 +601,10 @@ ELSEIF(OSG_GLES3_AVAILABLE)
 ELSE()
     IF (APPLE)
         SET(OPENGL_HEADER1 "#include <OpenGL/gl.h>" CACHE STRING "#include<> line for OpenGL Header")
+        SET(OPENGL_HEADER2 "" CACHE STRING "#include<> line for additional OpenGL Headers if required")
+    ELSEIF(${CYGWIN} AND ("${OSG_WINDOWING_SYSTEM}" STREQUAL "Win32"))
+        ADD_DEFINITIONS(-DOSG_CYGWIN_WIN32)
+        SET(OPENGL_HEADER1 "#include <w32api/GL/gl.h>" CACHE STRING "#include<> line for OpenGL Header")
         SET(OPENGL_HEADER2 "" CACHE STRING "#include<> line for additional OpenGL Headers if required")
     ELSE()
         SET(OPENGL_HEADER1 "#include <GL/gl.h>" CACHE STRING "#include<> line for OpenGL Header")

@@ -57,7 +57,7 @@ SET(LIB_COMMON_FILES
 # Collect all the configuration files
 SET(LIB_EXTRA_LIBS)
 
-IF(WIN32 AND NOT ANDROID)
+IF((WIN32 AND NOT ANDROID) OR (${OSG_WINDOWING_SYSTEM} STREQUAL "Win32"))
     #
     # Enable workaround for OpenGL driver issues when used in multithreaded/multiscreen with NVidia drivers on Windows XP
     # For example: osgviewer dumptruck.osg was showing total garbage (screen looked like shattered, splashed hedgehog)

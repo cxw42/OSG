@@ -17,7 +17,7 @@
 #include <osg/Config>
 #include <osg/Export>
 #include <osg/Types>
- 
+
 #cmakedefine OSG_GL1_AVAILABLE
 #cmakedefine OSG_GL2_AVAILABLE
 #cmakedefine OSG_GL3_AVAILABLE
@@ -41,8 +41,7 @@
 #define OSG_GLES3_FEATURES @OSG_GLES3_FEATURES@
 #define OSG_GL_CONTEXT_VERSION "@OSG_GL_CONTEXT_VERSION@"
 
-
-#ifndef WIN32
+#if !defined(WIN32) && !defined(OSG_CYGWIN_WIN32)
 
     // Required for compatibility with glext.h style function definitions of
     // OpenGL extensions, such as in src/osg/Point.cpp.
@@ -50,9 +49,9 @@
         #define APIENTRY
     #endif
 
-#else // WIN32
+#else // WIN32, or Cygwin with a Win32 windowing system
 
-    #if defined(__CYGWIN__) || defined(__MINGW32__)
+    #if (defined(__CYGWIN__) || defined(__MINGW32__)) && !defined(OSG_CYGWIN_WIN32)
 
         #ifndef APIENTRY
                 #define GLUT_APIENTRY_DEFINED
@@ -63,7 +62,7 @@
             #define CALLBACK __stdcall
         #endif
 
-    #else // ! __CYGWIN__
+    #else // ! __CYGWIN__, or cygwin using Win32
 
         // Under Windows avoid including <windows.h>
         // to avoid name space pollution, but Win32's <GL/gl.h>
