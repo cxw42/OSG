@@ -288,7 +288,12 @@ osgDB::BaseSerializer::Type ClassInterface::getType(const std::string& typeName)
 
 osgDB::ObjectWrapper* ClassInterface::getObjectWrapper(const osg::Object* object) const
 {
-    return osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper(object->getCompoundClassName());
+    return getObjectWrapper(object->getCompoundClassName());
+}
+
+osgDB::ObjectWrapper* ClassInterface::getObjectWrapper(const std::string& compoundClassName) const
+{
+    return osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper(compoundClassName);
 }
 
 osgDB::BaseSerializer* ClassInterface::getSerializer(const osg::Object* object, const std::string& propertyName, osgDB::BaseSerializer::Type& type) const
@@ -526,13 +531,17 @@ bool ClassInterface::getPropertyType(const osg::Object* object, const std::strin
 
 bool ClassInterface::getSupportedProperties(const osg::Object* object, PropertyMap& properties, bool searchAssociates) const
 {
-    osgDB::ObjectWrapper* ow = getObjectWrapper(object);
+    return getSupportedProperties(object->getCompoundClassName(), properties, searchAssociates);
+}
+
+bool ClassInterface::getSupportedProperties(const std::string& compoundClassName, PropertyMap& properties, bool searchAssociates) const
+{
+    osgDB::ObjectWrapper* ow = getObjectWrapper(compoundClassName);
     if (!ow)
     {
         return false;
     }
 
-    std::string compoundClassName = object->getCompoundClassName();
     ObjectPropertyMap::const_iterator wl_itr = _whiteList.find(compoundClassName);
     if (wl_itr != _whiteList.end())
     {

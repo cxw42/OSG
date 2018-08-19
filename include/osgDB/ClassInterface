@@ -153,8 +153,11 @@ public:
     /// Properties supported for a single class
     typedef std::map<std::string, osgDB::BaseSerializer::Type> PropertyMap;
 
-    /// Get the list of of properties supported by object
+    /// Get the list of of properties supported by \p object
     bool getSupportedProperties(const osg::Object* object, PropertyMap& properties, bool searchAssociates=true) const;
+
+    /// Get the list of of properties supported by an object of class \p compoundClassName
+    bool getSupportedProperties(const std::string& compoundClassName, PropertyMap& properties, bool searchAssociates=true) const;
 
     /// return true if the object can be cast to the specified class specified by compoundClassName
     bool isObjectOfType(const osg::Object* object, const std::string& compoundClassName) const;
@@ -198,6 +201,7 @@ public:
     const ObjectPropertyMap& getBlackList() const { return _blackList; }
 
     osgDB::ObjectWrapper* getObjectWrapper(const osg::Object* object) const;
+    osgDB::ObjectWrapper* getObjectWrapper(const std::string& compoundClassName) const;
 
     osgDB::BaseSerializer* getSerializer(const osg::Object* object, const std::string& propertyName, osgDB::BaseSerializer::Type& type) const;
 
