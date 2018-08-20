@@ -21,6 +21,11 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
+#if LUA_VERSION_NUM<=501
+#define lua_rawlen lua_strlen
+#endif
+
 }
 
 namespace lua

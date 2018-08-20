@@ -2447,10 +2447,6 @@ public:
     virtual void apply(const osg::Matrixd& value)       { _lse->pushValue(value); }
 };
 
-#if LUA_VERSION_NUM<=501
-#define lua_rawlen lua_strlen
-#endif
-
 class GetStackValueVisitor : public osg::ValueObject::SetValueVisitor
 {
 public:
