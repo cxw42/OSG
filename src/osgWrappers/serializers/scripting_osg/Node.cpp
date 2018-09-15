@@ -29,12 +29,86 @@
 
 #include <osg/Node>
 
+namespace {
+
+/// =========================================================================
+/// Make Node methods accessible to scripts
+
+/// Make Node::getOrCreateStateSet() accessible to scripts
+struct GetOrCreateStateSet : public osgDB::MethodObject
+{
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters - none used
+                      , osg::Parameters& outputParameters) const
+    {
+        osg::Node *node = objectPtr->asNode();
+        if(!node)
+        {
+            OSG_NOTICE << "Cannot call getOrCreateStateSet on non-Node" << std::endl;
+            return false;
+        }
+
+        osg::StateSet *ss = node->getOrCreateStateSet();
+        outputParameters.push_back(ss);
+        return true;
+    }
+};
+
+/// Make Node::dirtyBound() accessible to scripts
+struct DirtyBound : public osgDB::MethodObject
+{
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters - none used
+                      , osg::Parameters& //outputParameters
+                      ) const
+    {
+        osg::Node *node = objectPtr->asNode();
+        if(!node)
+        {
+            OSG_NOTICE << "Cannot call dirtyBound on non-Node" << std::endl;
+            return false;
+        }
+
+        node->dirtyBound();
+        return true;
+    }
+};
+
+/// Make Node::getBound() accessible to scripts
+struct GetBound : public osgDB::MethodObject
+{
+    virtual bool run(   osg::Object* objectPtr
+                      , osg::Parameters& //inputParameters - none used
+                      , osg::Parameters& outputParameters) const
+    {
+        osg::Node *node = objectPtr->asNode();
+        if(!node)
+        {
+            OSG_NOTICE << "Cannot call getBound on non-Node" << std::endl;
+            return false;
+        }
+
+        osg::ref_ptr<osg::BoundingSphereValueObject> bound(
+                new osg::BoundingSphereValueObject(node->getBound()));
+        outputParameters.push_back(bound);
+        return true;
+    }
+};
+
+} //namespace
+
 BEGIN_EXTEND_OBJECT_WRAPPER( scripting_osg_Node, osg::Node)
+    // Members
 #ifdef OSG_USE_FLOAT_BOUNDINGSPHERE
     ADD_BOUNDINGSPHEREF_SERIALIZER2( InitialBoundSphere, InitialBound, osg::BoundingSphere() );
 #else
     ADD_BOUNDINGSPHERED_SERIALIZER2( InitialBoundSphere, InitialBound, osg::BoundingSphere() );
 #endif
+
+    // Methods
+    ADD_METHOD_OBJECT( "getOrCreateStateSet", GetOrCreateStateSet );
+    ADD_METHOD_OBJECT( "dirtyBound", DirtyBound );
+    ADD_METHOD_OBJECT( "getBound", GetBound );
 END_EXTEND_OBJECT_WRAPPER()
 
 // vi: set ts=4 sts=4 sw=4 et ai: //

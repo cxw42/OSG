@@ -298,6 +298,18 @@ META_ValueObject(BoundingBoxd, BoundingBoxdValueObject)
 META_ValueObject(BoundingSpheref, BoundingSpherefValueObject)
 META_ValueObject(BoundingSphered, BoundingSpheredValueObject)
 
+#ifdef OSG_USE_FLOAT_BOUNDINGBOX
+typedef BoundingBoxfValueObject BoundingBoxValueObject;
+#else
+typedef BoundingBoxdValueObject BoundingBoxValueObject;
+#endif
+
+#ifdef OSG_USE_FLOAT_BOUNDINGSPHERE
+typedef BoundingSpherefValueObject BoundingSphereValueObject;
+#else
+typedef BoundingSpheredValueObject BoundingSphereValueObject;
+#endif
+
 /** provide implementation of osg::Object::getUserValue(..) template*/
 template<typename T>
 bool osg::Object::getUserValue(const std::string& name, T& value) const

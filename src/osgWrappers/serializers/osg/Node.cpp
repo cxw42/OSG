@@ -64,26 +64,6 @@ static bool writeDescriptions( osgDB::OutputStream& os, const osg::Node& node )
     return true;
 }
 
-/// Make getOrCreateStateSet() accessible to scripts
-struct GetOrCreateStateSet : public osgDB::MethodObject
-{
-    virtual bool run(   osg::Object* objectPtr
-                      , osg::Parameters& //inputParameters - none used
-                      , osg::Parameters& outputParameters) const
-    {
-        osg::Node *node = objectPtr->asNode();
-        if(!node) 
-        {
-            OSG_NOTICE << "Cannot call getOrCreateStateSet on non-Node" << std::endl;
-            return false;
-        }
-
-        osg::StateSet *ss = node->getOrCreateStateSet();
-        outputParameters.push_back(ss);
-        return true;
-    }
-};
-
 REGISTER_OBJECT_WRAPPER( Node,
                          new osg::Node,
                          osg::Node,
@@ -105,7 +85,4 @@ REGISTER_OBJECT_WRAPPER( Node,
     }
 
     ADD_OBJECT_SERIALIZER( StateSet, osg::StateSet, NULL );  // _stateset
-
-    // Custom methods
-    ADD_METHOD_OBJECT( "getOrCreateStateSet", GetOrCreateStateSet );
 }
